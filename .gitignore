@@ -45,3 +45,12 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+*.gz
+*.7z
+*-min.js
+*-min.html
+*.zip
+*.pdf
+personal.h
