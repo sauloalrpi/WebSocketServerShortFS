@@ -48,6 +48,15 @@
 #define DBG_SERIAL           Serial
 #define DBG_BAUDRATE         115200
 
+/* VARIABLES SSDP */
+#define SSDP_NAME             "ESP8266 Web Socket Server"
+#define SSDP_URL              "index.html"
+#define SSDP_MODEL_NAME       "FS GPS"
+#define SSDP_MODEL_NUMBER     "2016015"
+#define SSDP_MODEL_URL        "https://github.com/sauloalrpi/WebSocketServerShortFS"
+#define SSDP_MANUFACTURER     "Espressif"
+#define SSDP_MANUFACTURER_URL "http://espressif.com/en/products/esp8266/"
+#define SSDP_TTL              2
 
 /* VARIABLES - GPS */
 #ifdef USE_GPS
@@ -242,6 +251,28 @@ static void   init_mdns() {
   }
 }
 
+static void init_ssdp() {
+    server.on("/description.xml", HTTP_GET, [](){
+      SSDP.schema(server.client());
+    });
+
+#ifdef DEBUG_STEPS
+  DBG_SERIAL.printf("Starting SSDP...\n");
+#endif
+    SSDP.setSchemaURL(       "description.xml"     );
+    SSDP.setHTTPPort(        WEBSERVER_PORT        );
+    SSDP.setName(            SSDP_NAME             );
+    SSDP.setSerialNumber(    self_data.chipId      );
+    SSDP.setURL(             SSDP_URL              );
+    SSDP.setModelName(       SSDP_MODEL_NAME       );
+    SSDP.setModelNumber(     SSDP_MODEL_NUMBER     );
+    SSDP.setModelURL(        SSDP_MODEL_URL        );
+    SSDP.setManufacturer(    SSDP_MANUFACTURER     );
+    SSDP.setManufacturerURL( SSDP_MANUFACTURER_URL );
+    SSDP.setTTL(             SSDP_TTL              );
+    SSDP.begin();
+}
+
 static void   init_webserver() {
 #ifdef DEBUG_STEPS
   DBG_SERIAL.println( F("Registering WebServer") );
@@ -305,6 +336,8 @@ void setup() {
   init_websocket();
 
   init_mdns();
+
+  init_ssdp();
 
   init_webserver();
 }
