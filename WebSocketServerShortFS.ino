@@ -31,10 +31,10 @@
 
 
 #include "messenger.h"
-#include "handler_info.h"
-#include "handler_server.h"
-#include "handler_gps.h"
 #include "handler_websocket.h"
+#include "handler_server.h"
+#include "handler_info.h"
+#include "handler_gps.h"
 
 static void   init_serial();
 static void   init_spiffs();
@@ -46,22 +46,16 @@ static void   init_ssdp();
 void setup() {
   init_serial();
 
+#ifdef _HANDLER_INFO_H_
   DBG_SERIAL.println("SETUP INFO");
   init_info();
+#endif
 
   DBG_SERIAL.println("SETUP SPIFFS");
   init_spiffs();
 
   DBG_SERIAL.println("SETUP WIFI");
-  //init_wifi();
-
-  DBG_SERIAL.println("SETUP WEBSOCKER");
-  init_websocket();
-  
-#ifdef USE_GPS
-  DBG_SERIAL.println("SETUP GPS");
-  init_gps();
-#endif
+  init_wifi();
 
   DBG_SERIAL.println("SETUP MDNS");
   init_mdns();
@@ -69,8 +63,23 @@ void setup() {
   DBG_SERIAL.println("SETUP SSDP");
   init_ssdp();
 
+#ifdef _HANDLER_SERVER_H_
   DBG_SERIAL.println("SETUP WEBSERVER");
   init_webserver();
+#endif
+
+#ifdef _HANDLER_WEBSOCKET_H_
+  DBG_SERIAL.println("SETUP WEBSOCKER");
+  init_websocket();
+#endif
+
+
+#ifdef _HANDLER_GPS_H_
+#ifdef USE_GPS
+  DBG_SERIAL.println("SETUP GPS");
+  init_gps();
+#endif
+#endif
 
   DBG_SERIAL.println("END SETUP");
 }
@@ -167,8 +176,12 @@ static void   init_mdns() {
     DBG_SERIAL.println( F(".local/edit to see the file browser") );
     DBG_SERIAL.println ( F("MDNS responder started") );
 
+#ifdef _HANDLER_SERVER_H_
     MDNS.addService( F("http"), F("tcp"), WEBSERVER_PORT);
+#endif
+#ifdef _HANDLER_WEBSOCKET_H_
     MDNS.addService( F("ws"  ), F("tcp"), WEBSOCKET_PORT);
+#endif
   }
 }
 

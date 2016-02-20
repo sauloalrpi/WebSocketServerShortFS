@@ -73,15 +73,6 @@ void    message_gps_info_initer(    message* msg ) {
   DBG_SERIAL.print  ( F("Baudrate:"   ) );
   DBG_SERIAL.println( info_gps_data.gpsBaudrate );
 
-  info_gps_data.gpsPoolEvery                     = GPS_POOL_EVERY;
-  info_gps_data.gpsStartField                    = GPS_START_FIELD;
-  info_gps_data.gpsEndField                      = GPS_END_FIELD;
-  info_gps_data.gpsRegisterFieldSep              = GPS_FIELD_SEP;
-  info_gps_data.gpsBaudrate                      = GPS_BAUDRATE;
-  info_gps_data.gpsRxPort                        = GPS_RX_PORT;
-  info_gps_data.gpsTxPort                        = GPS_TX_PORT;
-  info_gps_data.gpsReadFor                       = GPS_READ_FOR;
-
   GPS_SERIAL.begin(   info_gps_data.gpsBaudrate );
   
   DBG_SERIAL.print(  F("WAITING FOR GPS: ") );
@@ -107,7 +98,7 @@ void    message_gps_info_updater(   message* msg ) {
 }
 
 void    message_gps_info_printer(   message* msg ) {
-  DBG_SERIAL.println( F("info_gps_printer START") );
+  //DBG_SERIAL.println( F("info_gps_printer START") );
   
   DBG_SERIAL.print( F("GPS Pool Every                      : ") ); DBG_SERIAL.println(info_gps_data.gpsPoolEvery       );
   DBG_SERIAL.print( F("GPS Start Field                     : ") ); DBG_SERIAL.println(info_gps_data.gpsStartField      );
@@ -118,12 +109,12 @@ void    message_gps_info_printer(   message* msg ) {
   DBG_SERIAL.print( F("GPS Tx Port                         : ") ); DBG_SERIAL.println(info_gps_data.gpsTxPort          );
   DBG_SERIAL.print( F("GPS Read For                        : ") ); DBG_SERIAL.println(info_gps_data.gpsReadFor         );
 
-  DBG_SERIAL.println( F("info_gps_printer END") );
-  DBG_SERIAL.flush();
+//  DBG_SERIAL.println( F("info_gps_printer END") );
+//  DBG_SERIAL.flush();
 }
 
 void    message_gps_info_publisher( message* msg ) {
-  DBG_SERIAL.println( F("info_gps_publisher START") );
+  //DBG_SERIAL.println( F("info_gps_publisher START") );
 
   String text;
   msg->pop_message( text );
@@ -136,10 +127,10 @@ void    message_gps_info_publisher( message* msg ) {
 #endif
   //delayy(100);
 
-  DBG_SERIAL.println( F("SENT") );
+  //DBG_SERIAL.println( F("SENT") );
   
-  DBG_SERIAL.println( F("info_gps_publisher END") );
-  DBG_SERIAL.flush();
+  //DBG_SERIAL.println( F("info_gps_publisher END") );
+  //DBG_SERIAL.flush();
 }
 
 void    message_gps_info_looper(    message* msg ) {}
@@ -280,8 +271,8 @@ void    message_gps_data_publisher( message* msg ) {
 #ifdef _HANDLER_WEBSOCKET_H_
   webSocket.broadcastTXT( text );
 #else
-  DBG_SERIAL.print( F("BROADCAST REGISTER: ") );
-  DBG_SERIAL.println( text );
+  //DBG_SERIAL.print( F("BROADCAST REGISTER: ") );
+  //DBG_SERIAL.println( text );
 #endif
 
 }
@@ -296,6 +287,17 @@ void    message_gps_data_looper(    message* msg ) {}
 void    init_gps() {
   DBG_SERIAL.println( F("init_gps START") );
   DBG_SERIAL.flush();
+
+
+  info_gps_data.gpsPoolEvery                     = GPS_POOL_EVERY;
+  info_gps_data.gpsStartField                    = GPS_START_FIELD;
+  info_gps_data.gpsEndField                      = GPS_END_FIELD;
+  info_gps_data.gpsRegisterFieldSep              = GPS_FIELD_SEP;
+  info_gps_data.gpsBaudrate                      = GPS_BAUDRATE;
+  info_gps_data.gpsRxPort                        = GPS_RX_PORT;
+  info_gps_data.gpsTxPort                        = GPS_TX_PORT;
+  info_gps_data.gpsReadFor                       = GPS_READ_FOR;
+
   
   message_gps_info_funcs.tester     = message_gps_info_tester   ;
   message_gps_info_funcs.initer     = message_gps_info_initer   ;
@@ -304,7 +306,7 @@ void    init_gps() {
   message_gps_info_funcs.updater    = message_gps_info_updater  ;
   message_gps_info_funcs.looper     = message_gps_info_looper   ;
   info_gps_data.message_info_gps_id = messages.size();
-  message_gps_info_msg              = message("GPS Info", -1, -1, message_gps_info_funcs);
+  message_gps_info_msg              = message("GPS Info", -1, -1, message_gps_info_funcs, true);
   messages.push_back( &message_gps_info_msg );
 
 

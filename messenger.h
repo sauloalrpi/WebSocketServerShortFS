@@ -41,6 +41,7 @@ class message {
     uint32_t           last_loop    =     0;
     uint32_t           num_updates  =     0;
     String             nickname     =    "";
+    bool               initted      = false;
         
     bool               updated      = false;
     int32_t            update_every =    -1;
@@ -50,24 +51,36 @@ class message {
     message_funcs_t    funcs;
   public:
     message(){}
-    message(String n, int32_t u, int32_t l, message_funcs_t& dfuncs): nickname(n), update_every(u), loop_every(l), funcs(dfuncs) { 
-      DBG_SERIAL.print   ( "Initializing Messenger: " );
-      DBG_SERIAL.println ( this->repr() );
-      init(); 
+    message(String n, int32_t u, int32_t l, message_funcs_t& dfuncs, bool run_init=false): nickname(n), update_every(u), loop_every(l), funcs(dfuncs) { 
+      if ( run_init ) {
+        init();
+      }
     }
 
-    void     set_message(      String&         n_message   ) {        this->c_message    = n_message.c_str(); this->updated = true ; this->num_updates += 1;  }
-    void     pop_message(      String&         o_message   ) {              o_message    = c_message.c_str(); this->updated = false; this->c_message    = ""; }
-    void     set_update_every( int32_t u                   ) {        this->update_every = u; }
-    void     set_loop_every(   int32_t l                   ) {        this->loop_every   = l; }
-    bool     is_updated()                                    { return this->updated;          }
-    uint32_t get_num_updates()                               { return this->num_updates;      }
+    void     set_message(      String&         n_message   ) { this->init();        this->c_message    = n_message.c_str(); this->updated = true ; this->num_updates += 1;  }
+    void     pop_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str(); this->updated = false; this->c_message    = ""; }
+    void     get_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str();                                                 }
+    void     set_update_every( int32_t u                   ) { this->init();        this->update_every = u; }
+    void     set_loop_every(   int32_t l                   ) { this->init();        this->loop_every   = l; }
+    bool     is_updated()                                    { this->init(); return this->updated;          }
+    uint32_t get_num_updates()                               { this->init(); return this->num_updates;      }
 
-    void     test()                                          { funcs.tester(    this ); }
-    void     init()                                          { funcs.initer(    this ); this->last_loop = millis(); this->last_update = millis(); }
-    void     print()                                         { funcs.printer(   this ); }
-    void     publish()                                       { funcs.publisher( this ); }
-    void     loop()                                          { 
+    void     test()                                          { this->init(); funcs.tester(    this ); }
+    void     init(bool force = false)                        { 
+      if (( ! this->initted ) || ( force )){
+        DBG_SERIAL.print   ( "Initializing Messenger: " );
+        DBG_SERIAL.println ( this->repr() );
+  
+        funcs.initer(    this ); 
+        this->last_loop   = millis(); 
+        this->last_update = millis(); 
+        this->initted     = true;
+      }
+    }
+    void     print()                                         { this->init(); funcs.printer(   this ); }
+    void     publish()                                       { this->init(); funcs.publisher( this ); }
+    void     loop()                                          {
+      this->init(); 
       if ( this->loop_every >= 0 ) {
         if ( (millis() - this->last_loop) >= this->loop_every ) {
           this->funcs.looper( this );
@@ -78,6 +91,7 @@ class message {
       }
     }
     void     update()                                        {
+      this->init();
       if ( this->update_every >= 0 ) {
         if ( ! this->updated ) {
           if ( (millis() - this->last_update) >= this->update_every ) {

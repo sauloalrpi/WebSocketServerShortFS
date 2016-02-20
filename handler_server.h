@@ -49,12 +49,13 @@ void   handleFileUploadQuery();
 void   handleFileUploadData();
 void   handleFormattingQuery();
 void   handleFormattingData();
-void   handleInfo();
 void   handleUploadPage();
 bool   handleFileRead(    String path);
 void   handleFileListJson(String &dirname);
 void   handleFileListHtml(String &dirname);
 void   handleNotFound();
+const bool   ends_with(String& filename, const char* ext);
+const bool   ends_with(String& filename, String      ext);
 String formatBytes(size_t bytes);
 String getContentType(String filename);
 //void   handleRoot();
@@ -80,7 +81,6 @@ void   message_webserver_initer(    message* msg ) {
   server.on( "/edit"  , HTTP_DELETE, handleFileDelete                            ); // delete file
   server.on( "/edit"  , HTTP_POST  , handleFileUploadQuery, handleFileUploadData ); // first callback is called after the request has ended with all parsed arguments second callback handles file uploads at that location
   server.on( "/format", HTTP_GET   , handleFormattingQuery, handleFormattingData ); // format
-  server.on( "/info"  , HTTP_GET   , handleInfo                                  ); // get heap status, analog input value and all GPIO statuses in one json call
   server.on( "/list"  , HTTP_GET   , handleFileList                              ); // list directory
   server.on( "/upload", HTTP_GET   , handleUploadPage                            ); // upload page
   server.onNotFound(handleNotFound); //called when the url is not defined here use it to load content from SPIFFS
@@ -311,43 +311,6 @@ void   handleFormattingData() {
   SPIFFS.format();
 }
 
-void   handleInfo() {
-  webserver_data.busy    = true;
-
-/*
-  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
-  JsonObject& json  = jsonBuffer.createObject();
-
-  //DBG_SERIAL.print("json.success(): ");
-  //DBG_SERIAL.println(json.success());
-
-  getSelfDynamicInfo();
-  infoToJson(json);
-  
-  int len = json.measureLength();
-  
-  DBG_SERIAL.print(   F("handleInfo measureLength: ") );
-  DBG_SERIAL.println( len );
-  DBG_SERIAL.flush();
-
-  char temp[JSON_BUFFER_SIZE];
-  json.printTo(temp, sizeof(temp)); 
-  
-  DBG_SERIAL.print(   F("INFO JSON: ") );
-  DBG_SERIAL.println( temp             );
-  DBG_SERIAL.println( sizeof(temp)     );
-  DBG_SERIAL.flush();
-
-  DBG_SERIAL.println(   F("INFO JSON SENDING") );
-
-  server.send( 200, "application/json", temp );
-
-  DBG_SERIAL.println(   F("INFO JSON SENT") );
-
-  //delayy(10);
-*/
-  webserver_data.busy    = false;
-}
 
 void   handleUploadPage() {
   String dirname = "/";
@@ -433,26 +396,29 @@ void   handleFileListHtml(String &dirname) {
          output += "<table><tr><td>Filename</td><td>Size</td><td>Action</td></tr>";
          
   while(dir.next()){
-    File   entry  = dir.openFile("r");
-    String fn     = String(entry.name()).substring(1);
+    File   entry      = dir.openFile("r");
+    String fn         = String(entry.name()).substring(1);
     DBG_SERIAL.println("handleFileList HTML :: filename: " + fn);
-    bool isDir    =  false;
+    bool isDir        =  false;
+    output           += "<tr>";
     if ( isDir ) {
-      output       += "<tr>";
-      output       += "<td><a href=\"/list?dir=" + dirname + "/" + fn + "\">" + fn + "</a></td>";
-      output       += "<td>DIR</td>";
-      output       += "<td></td>";
-      output       += "</tr>";
+      output         += "<td><a href=\"/list?dir=" + dirname + "/" + fn + "\">" + fn + "</a></td>";
+      output         += "<td>DIR</td>";
+      output         += "<td></td>";
     } else {
-      output       += "<tr>";
-      output       += "<td><a href=\""+ fn + "\">" + fn + "</a></td>";
-      output       += "<td>" + formatBytes(entry.size()) + "</td>";
-      output       += "<td><input type=\"submit\" name=\"Delete\" value=\"Delete\" onclick=\"x=new XMLHttpRequest();x.open('DELETE', '/edit?path="+dirname+fn+"', true);x.send(null);location.reload()\"></input></form></td>";
-      output       += "</tr>";
+      if ( fn.endsWith(".gz") ) {
+        String fname  = fn.substring(0, fn.length()-3);
+        output       += "<td><a href=\""+ fname + "\">" + fname + "</a> <a href=\""+ fn + "\">.gz</a></td>";
+      } else {
+        output       += "<td><a href=\""+ fn + "\">" + fn + "</a></td>";
+      }
+      output         += "<td>" + formatBytes(entry.size()) + "</td>";
+      output         += "<td><input type=\"submit\" name=\"Delete\" value=\"Delete\" onclick=\"x=new XMLHttpRequest();x.open('DELETE', '/edit?path="+dirname+fn+"', true);x.send(null);location.reload()\"></input></form></td>";
     }
+    output           += "</tr>";
     entry.close();
   }
-  output           += "</table></br><a href=\"list?dir=/\">List</a> | <a href=\"upload?dir="+dirname+"\">Upload</a> | <a href=\"info\">info</a><br/><table></table></body></html>";
+  output             += "</table></br><a href=\"list?dir=/\">List</a> | <a href=\"upload?dir="+dirname+"\">Upload</a> | <a href=\"info\">info</a> | <a href=\"status\">status</a><br/></body></html>";
   server.send(200, "text/html", output);
 }
 
@@ -463,8 +429,15 @@ void   handleNotFound(){
 }
 
 
-
-
+/*
+//http://stackoverflow.com/questions/20446201/how-to-check-if-string-ends-with-txt
+const bool ends_with(String& filename, const char* ext) {
+  return ends_with(filename, String(ext)) {  
+}
+const bool ends_with(String& filename, String      ext) {
+  return filename.substr(std::max(ext.size(), filename.size())-ext.size()) == ext);
+}
+*/
 
 /*
 void handleRoot()   {

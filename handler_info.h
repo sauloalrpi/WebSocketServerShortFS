@@ -62,6 +62,9 @@ void    message_dynamic_info_publisher( message* msg );
 void    message_dynamic_info_looper(    message* msg );
 void    message_dynamic_info_to_json(   message* msg );
 
+void   handleInfo();
+void   handleStatus();
+
 //static void   updateExtraInfo();
 
 
@@ -335,7 +338,6 @@ static void   updateExtraInfo() {
 void   init_info() {
   DBG_SERIAL.println( F("init_info START") );
   
-
   message_static_info_funcs.tester     = message_static_info_tester   ;
   message_static_info_funcs.initer     = message_static_info_initer   ;
   message_static_info_funcs.printer    = message_static_info_printer  ;
@@ -343,7 +345,7 @@ void   init_info() {
   message_static_info_funcs.updater    = message_static_info_updater  ;
   message_static_info_funcs.looper     = message_static_info_looper   ;
   info_static_data.message_static_id   = messages.size();
-  message_static_info_msg              = message("Static Info", -1, -1, message_static_info_funcs);
+  message_static_info_msg              = message("Static Info", -1, -1, message_static_info_funcs, true);
   messages.push_back( &message_static_info_msg );
 
   message_dynamic_info_funcs.tester    = message_dynamic_info_tester   ;
@@ -353,12 +355,63 @@ void   init_info() {
   message_dynamic_info_funcs.updater   = message_dynamic_info_updater  ;
   message_dynamic_info_funcs.looper    = message_dynamic_info_looper   ;
   info_static_data.info_dynamic_id     = messages.size();
-  message_dynamic_info_msg             = message("Dynamic Info", 10000, -1, message_dynamic_info_funcs);
+  message_dynamic_info_msg             = message("Dynamic Info", 10000, -1, message_dynamic_info_funcs, true);
   messages.push_back( &message_dynamic_info_msg );
+
+  DBG_SERIAL.println( F("Registering /info") );
+  server.on( "/info"  , HTTP_GET   , handleInfo                                  ); // get heap status, analog input value and all GPIO statuses in one json call
+  DBG_SERIAL.println( F("Registering /status") );
+  server.on( "/status", HTTP_GET   , handleStatus                                ); // get heap status, analog input value and all GPIO statuses in one json call
 
   DBG_SERIAL.println( F("init_info END") );
   DBG_SERIAL.flush();
 }
 
+
+
+void   handleInfo() {
+  webserver_data.busy    = true;
+
+/*
+  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+  JsonObject& json  = jsonBuffer.createObject();
+
+  //DBG_SERIAL.print("json.success(): ");
+  //DBG_SERIAL.println(json.success());
+
+  getSelfDynamicInfo();
+  infoToJson(json);
+  
+  int len = json.measureLength();
+  
+  DBG_SERIAL.print(   F("handleInfo measureLength: ") );
+  DBG_SERIAL.println( len );
+  DBG_SERIAL.flush();
+
+  char temp[JSON_BUFFER_SIZE];
+  json.printTo(temp, sizeof(temp)); 
+  
+  DBG_SERIAL.print(   F("INFO JSON: ") );
+  DBG_SERIAL.println( temp             );
+  DBG_SERIAL.println( sizeof(temp)     );
+  DBG_SERIAL.flush();
+
+  DBG_SERIAL.println(   F("INFO JSON SENDING") );
+
+  server.send( 200, "application/json", temp );
+
+  DBG_SERIAL.println(   F("INFO JSON SENT") );
+
+  //delayy(10);
+*/
+  server.send( 200, "application/json", "{\"_type\":\"info\"}" );
+  webserver_data.busy    = false;
+}
+
+void handleStatus() {
+  webserver_data.busy    = true;
+  server.send( 200, "application/json", "{\"_type\":\"status\"}" );
+  webserver_data.busy    = false;
+}
 
 #endif //#ifndef _HANDLER_INFO_H_
