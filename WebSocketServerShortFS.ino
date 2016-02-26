@@ -31,37 +31,27 @@
 
 
 #include "messenger.h"
-#include "handler_websocket.h"
-#include "handler_server.h"
-#include "handler_info.h"
-#include "handler_gps.h"
+#include "handlers/handler_websocket.h"
+#include "handlers/handler_server.h"
+#include "handlers/handler_info.h"
+#include "handlers/handler_gps.h"
+#include "handlers/handler_BNO055.h"
 
-static void   init_serial();
-static void   init_spiffs();
-static void   init_wifi();
-static void   init_mdns();
-static void   init_ssdp();
+static void init_system();
+static void init_serial();
+static void init_spiffs();
+static void init_wifi();
+static void init_mdns();
+static void init_ssdp();
 
 /* SETUP ... DUH */
 void setup() {
-  init_serial();
+  init_system();
 
 #ifdef _HANDLER_INFO_H_
   DBG_SERIAL.println("SETUP INFO");
   init_info();
 #endif
-
-  DBG_SERIAL.println("SETUP SPIFFS");
-  init_spiffs();
-
-  DBG_SERIAL.println("SETUP WIFI");
-  init_wifi();
-
-  DBG_SERIAL.println("SETUP MDNS");
-  init_mdns();
-
-  DBG_SERIAL.println("SETUP SSDP");
-  init_ssdp();
 
 #ifdef _HANDLER_SERVER_H_
   DBG_SERIAL.println("SETUP WEBSERVER");
@@ -78,6 +68,14 @@ void setup() {
 #ifdef USE_GPS
   DBG_SERIAL.println("SETUP GPS");
   init_gps();
+#endif
+#endif
+
+
+#ifdef _HANDLER_BNO055_H_
+#ifdef USE_BNO055
+  DBG_SERIAL.println("SETUP GPS");
+  init_BNO055();
 #endif
 #endif
 
@@ -98,6 +96,21 @@ void loop() {
 
 
 
+static void init_system() {
+  init_serial();
+
+  DBG_SERIAL.println("SETUP SPIFFS");
+  init_spiffs();
+
+  DBG_SERIAL.println("SETUP WIFI");
+  init_wifi();
+
+  DBG_SERIAL.println("SETUP MDNS");
+  init_mdns();
+
+  DBG_SERIAL.println("SETUP SSDP");
+  init_ssdp();
+}
 
 static void   init_serial() {
   DBG_SERIAL.begin(DBG_BAUDRATE);

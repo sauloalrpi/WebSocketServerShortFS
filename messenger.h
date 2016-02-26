@@ -51,47 +51,58 @@ class message {
     message_funcs_t    funcs;
   public:
     message(){}
-    message(String n, int32_t u, int32_t l, message_funcs_t& dfuncs, bool run_init=false): nickname(n), update_every(u), loop_every(l), funcs(dfuncs) { 
+    message(String n, int32_t u, int32_t l, message_funcs_t& dfuncs, bool run_init=false): nickname(n), update_every(u), loop_every(l), funcs(dfuncs), c_message("") { 
       if ( run_init ) {
-        init();
+        this->init();
       }
     }
-
-    void     set_message(      String&         n_message   ) { this->init();        this->c_message    = n_message.c_str(); this->updated = true ; this->num_updates += 1;  }
+    void     set_message(      String&         n_message   ) { this->init();        this->c_message    = n_message.c_str(); this->updated = true ; this->num_updates += 1;  DBG_SERIAL.print( "Setting var: " ); DBG_SERIAL.print( nickname ); DBG_SERIAL.print( " val: " ); DBG_SERIAL.println( n_message ); DBG_SERIAL.flush(); }
     void     pop_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str(); this->updated = false; this->c_message    = ""; }
-    void     get_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str();                                                 }
+    void     get_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str(); }
     void     set_update_every( int32_t u                   ) { this->init();        this->update_every = u; }
     void     set_loop_every(   int32_t l                   ) { this->init();        this->loop_every   = l; }
     bool     is_updated()                                    { this->init(); return this->updated;          }
     uint32_t get_num_updates()                               { this->init(); return this->num_updates;      }
-
     void     test()                                          { this->init(); funcs.tester(    this ); }
     void     init(bool force = false)                        { 
       if (( ! this->initted ) || ( force )){
-        DBG_SERIAL.print   ( "Initializing Messenger: " );
-        DBG_SERIAL.println ( this->repr() );
-  
-        funcs.initer(    this ); 
-        this->last_loop   = millis(); 
-        this->last_update = millis(); 
-        this->initted     = true;
+        DBG_SERIAL.print( "Initializing Messenger: "); DBG_SERIAL.println( this->nickname ); DBG_SERIAL.flush();
+                
+        String  msg; this->repr(msg); DBG_SERIAL.println ( msg ); DBG_SERIAL.flush();
+
+        DBG_SERIAL.print( "Calling init: "); DBG_SERIAL.println( this->nickname ); DBG_SERIAL.flush();
+
+        this->initted     = true;        
+        this->funcs.initer(    this );
+        this->last_loop   = millis();
+        this->last_update = millis();
+
+        DBG_SERIAL.print( "Finished initializing Messenger: " ); DBG_SERIAL.println( this->nickname ); DBG_SERIAL.flush();
       }
     }
     void     print()                                         { this->init(); funcs.printer(   this ); }
     void     publish()                                       { this->init(); funcs.publisher( this ); }
     void     loop()                                          {
+//      DBG_SERIAL.print( "Looping Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
+      
       this->init(); 
+      
       if ( this->loop_every >= 0 ) {
         if ( (millis() - this->last_loop) >= this->loop_every ) {
           this->funcs.looper( this );
           this->last_loop = millis();
           
-          //DBG_SERIAL.println ( this->repr() );
+          //String  msg; this->repr(msg); DBG_SERIAL.println ( msg ); DBG_SERIAL.flush();
         }
       }
+      
+//      DBG_SERIAL.print( "Loopped Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
     }
     void     update()                                        {
+//      DBG_SERIAL.print( "Updating Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
+      
       this->init();
+      
       if ( this->update_every >= 0 ) {
         if ( ! this->updated ) {
           if ( (millis() - this->last_update) >= this->update_every ) {
@@ -100,33 +111,33 @@ class message {
             if ( this->is_updated() ) {
               this->print();
               this->publish();
-              DBG_SERIAL.println ( this->repr() );
+              String  msg; this->repr(msg); DBG_SERIAL.println ( msg ); DBG_SERIAL.flush(); DBG_SERIAL.flush();
             }
             
             this->last_update = millis();
           }
         }
       }
+      
+//      DBG_SERIAL.print( "Updated Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
     }
     void     go()                                            {
       //test();
       loop();
       update();
     }
-    String   repr()                                          {
-      String  msg;
-      msg += "Name: "   + nickname     +
-      " Updated: "      + updated      +
-      " Num Updates: "  + num_updates  +
-      " Update Every: " + update_every +
-      " Loop Every: "   + loop_every   +
-      " Now: "          + millis()     +
-      " Last Updated: " + last_update  +
-      " (" + (millis()  - last_update) + ") " +
-      " Last Looped: "  + last_loop    +
-      " (" + (millis()  - last_loop  ) + ") " +
+    void     repr(String  &msg)                              {
+      msg += "Name: "   + nickname                  +
+      " Updated: "      + updated                   +
+      " Num Updates: "  + num_updates               +
+      " Update Every: " + update_every              +
+      " Loop Every: "   + loop_every                +
+      " Now: "          + millis()                  +
+      " Last Updated: " + last_update               +
+      " ("              + (millis()  - last_update) + ") " +
+      " Last Looped: "  + last_loop                 +
+      " ("              + (millis()  - last_loop  ) + ") " +
       " Message: "      + c_message;
-      return msg;
     }
 };
 

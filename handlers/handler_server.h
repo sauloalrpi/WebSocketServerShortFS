@@ -18,13 +18,15 @@ File             fsUploadFile;
 //"/upload", HTTP_GET   , handleUploadPage);
 //server.onNotFound(handleNotFound);
 
+
+
 struct webserver_data_t {
   uint8_t  message_webserver_id;
-  String   endpoints;
-  String   endpoint_order;
-  String   endpoint_sep;
-  String   endpoint_field_sep;
-  bool     busy;
+  String   endpoints            = "edit,edit,GET,,|create,edit,PUT,path,|delete,edit,DELETE,path,|format,format,GET,,|list,list,GET,,dir,json|upload,upload,GET,,dir";
+  String   endpoint_order       = "name|endpoint|method|compulsory parameters|optional parameters";
+  String   endpoint_sep         = "|";
+  String   endpoint_field_sep   = ",";
+  bool     busy                 = false;
 };
 webserver_data_t webserver_data;
 message_funcs_t  message_webserver_funcs;
@@ -67,13 +69,11 @@ void   message_webserver_tester(    message* msg ) {}
 void   message_webserver_initer(    message* msg ) {
   DBG_SERIAL.println( F("message_webserver_init START") );
 
-  webserver_data.busy               = false;
-  //                                   name, endpoint, method, compulsory parameters, optional parameters
-  webserver_data.endpoints          = "edit,edit,GET,,|create,edit,PUT,path,|delete,edit,DELETE,path,|format,format,GET,,|info,info,GET,,|list,list,GET,,dir,json|upload,upload,GET,,dir";
-  webserver_data.endpoint_order     = "name|endpoint|method|compulsory parameters|optional parameters";
-  webserver_data.endpoint_sep       = "|";
-  webserver_data.endpoint_field_sep = ",";
+  DBG_SERIAL.println( F("Registering WebServer") );
+  DBG_SERIAL.print  ( F("Port:"                ) );
+  DBG_SERIAL.println( WEBSERVER_PORT             );
 
+  //                                   name, endpoint, method, compulsory parameters, optional parameters
 
   //SERVER INIT
   server.on( "/edit"  , HTTP_GET   , handleEdit                                  ); // load editor
@@ -166,10 +166,6 @@ void   message_webserver_to_json(    message* msg ) {
 
 void   init_webserver() {  
   DBG_SERIAL.println( F("init_webserver START") );
-  
-  DBG_SERIAL.println( F("Registering WebServer") );
-  DBG_SERIAL.print  ( F("Port:"                ) );
-  DBG_SERIAL.println( WEBSERVER_PORT             );
   
   message_webserver_funcs.tester      = message_webserver_tester   ;
   message_webserver_funcs.initer      = message_webserver_initer   ;

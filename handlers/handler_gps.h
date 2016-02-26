@@ -3,9 +3,6 @@
 
 #ifdef  USE_GPS
 
-#define _INFO_ID_GPS_INFO_        2
-#define _INFO_ID_GPS_DATA_        3
-
 #define GPS_POOL_EVERY         1100
 #define GPS_READ_FOR            900
 #define GPS_RX_PORT              13
@@ -22,14 +19,14 @@
 struct info_gps_data_t {
   uint8_t       message_info_gps_id;
   uint8_t       message_data_gps_id;
-  uint32_t      gpsBaudrate;
-  uint32_t      gpsRxPort;
-  uint32_t      gpsTxPort;
-  uint32_t      gpsReadFor;
-  uint32_t      gpsPoolEvery;
-  String        gpsStartField;
-  String        gpsEndField;
-  String        gpsRegisterFieldSep;
+  uint32_t      gpsBaudrate         = GPS_BAUDRATE;
+  uint32_t      gpsRxPort           = GPS_RX_PORT;
+  uint32_t      gpsTxPort           = GPS_TX_PORT;
+  uint32_t      gpsReadFor          = GPS_READ_FOR;
+  uint32_t      gpsPoolEvery        = GPS_POOL_EVERY;
+  String        gpsStartField       = GPS_START_FIELD;
+  String        gpsEndField         = GPS_END_FIELD;
+  String        gpsRegisterFieldSep = GPS_FIELD_SEP;
 };
 info_gps_data_t info_gps_data;
 message_funcs_t message_gps_info_funcs;
@@ -95,6 +92,7 @@ void    message_gps_info_initer(    message* msg ) {
 
 void    message_gps_info_updater(   message* msg ) {
   //msg->init();
+  message_gps_info_to_json( msg );
 }
 
 void    message_gps_info_printer(   message* msg ) {
@@ -135,7 +133,7 @@ void    message_gps_info_publisher( message* msg ) {
 
 void    message_gps_info_looper(    message* msg ) {}
 
-void    message_gps_info_to_json(   message* msg ){
+void    message_gps_info_to_json(   message* msg ) {
   DBG_SERIAL.println( F("info_gps_to_json START") );
     
   StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
@@ -144,16 +142,16 @@ void    message_gps_info_to_json(   message* msg ){
   json["_type"] = "gps_info";
   json["_id"  ] = millis();
 
-  JsonObject& j_gps_info                 = json  .createNestedObject("data"  );
+  JsonObject& j_gps_info                          = json.createNestedObject("data");
 
-  j_gps_info[ "gpsPoolEvery"                    ] = info_gps_data.gpsPoolEvery;
-  j_gps_info[ "gpsStartField"                   ] = info_gps_data.gpsStartField;
-  j_gps_info[ "gpsEndField"                     ] = info_gps_data.gpsEndField;
-  j_gps_info[ "gpsRegisterFieldSep"             ] = info_gps_data.gpsRegisterFieldSep;
-  j_gps_info[ "gpsBaudrate"                     ] = info_gps_data.gpsBaudrate;
-  j_gps_info[ "gpsRxPort"                       ] = info_gps_data.gpsRxPort;
-  j_gps_info[ "gpsTxPort"                       ] = info_gps_data.gpsTxPort;
-  j_gps_info[ "gpsReadFor"                      ] = info_gps_data.gpsReadFor;
+  j_gps_info[ F("gpsPoolEvery"                  ) ] = info_gps_data.gpsPoolEvery;
+  j_gps_info[ F("gpsStartField"                 ) ] = info_gps_data.gpsStartField;
+  j_gps_info[ F("gpsEndField"                   ) ] = info_gps_data.gpsEndField;
+  j_gps_info[ F("gpsRegisterFieldSep"           ) ] = info_gps_data.gpsRegisterFieldSep;
+  j_gps_info[ F("gpsBaudrate"                   ) ] = info_gps_data.gpsBaudrate;
+  j_gps_info[ F("gpsRxPort"                     ) ] = info_gps_data.gpsRxPort;
+  j_gps_info[ F("gpsTxPort"                     ) ] = info_gps_data.gpsTxPort;
+  j_gps_info[ F("gpsReadFor"                    ) ] = info_gps_data.gpsReadFor;
 
   String text;
   jsonToString(json, text);
@@ -287,16 +285,6 @@ void    message_gps_data_looper(    message* msg ) {}
 void    init_gps() {
   DBG_SERIAL.println( F("init_gps START") );
   DBG_SERIAL.flush();
-
-
-  info_gps_data.gpsPoolEvery                     = GPS_POOL_EVERY;
-  info_gps_data.gpsStartField                    = GPS_START_FIELD;
-  info_gps_data.gpsEndField                      = GPS_END_FIELD;
-  info_gps_data.gpsRegisterFieldSep              = GPS_FIELD_SEP;
-  info_gps_data.gpsBaudrate                      = GPS_BAUDRATE;
-  info_gps_data.gpsRxPort                        = GPS_RX_PORT;
-  info_gps_data.gpsTxPort                        = GPS_TX_PORT;
-  info_gps_data.gpsReadFor                       = GPS_READ_FOR;
 
   
   message_gps_info_funcs.tester     = message_gps_info_tester   ;

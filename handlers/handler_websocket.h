@@ -5,13 +5,14 @@
 //#define WEBSOCKETS_SERVER_CLIENT_MAX  (5)
 //#define DEBUG_WEBSOCKETS
 
-#include "libs/websocket/WebSocketsServer.h"
+#include "../libs/websocket/WebSocketsServer.h"
 #include <ArduinoJson.h>
+
 
 struct websocket_data_t {
   uint8_t  message_websocket_id;
-  uint32_t max_clients;
-  uint8_t  has_client;
+  uint32_t max_clients          = WEBSOCKETS_SERVER_CLIENT_MAX;
+  uint8_t  has_client           = 0;
 };
 
 websocket_data_t websocket_data;
@@ -40,9 +41,6 @@ void   message_websocket_tester(    message* msg ) {}
 
 void   message_websocket_initer(    message* msg ) {
   DBG_SERIAL.println( F("message_websocket_init START") );
-
-  websocket_data.max_clients = WEBSOCKETS_SERVER_CLIENT_MAX;
-  websocket_data.has_client  = 0;
 
   DBG_SERIAL.println ( F("Registering WebSocket") );
   DBG_SERIAL.print   ( F("Port:"                ) );

@@ -42,7 +42,7 @@ extern "C" {
 
 /* VARIABLES */
 #include "personal.h"
-#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.3"
+#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.4"
 
 /* VARIABLES - WIFI */
 #ifndef WIFI_SSID
@@ -58,7 +58,7 @@ extern "C" {
 
 /* VARIABLES - GLOBAL */
 #define JSON_BUFFER_SIZE       1536
-#define USE_GPS
+
 
 /* VARIABLES - SERVERS */
 #define WEBSERVER_PORT           80
@@ -69,6 +69,7 @@ extern "C" {
 #define DBG_SET_DEBUG
 #define DBG_BAUDRATE         115200
 
+
 /* VARIABLES SSDP */
 #define SSDP_NAME             "ESP8266 FS Web Socket Server"
 #define SSDP_URL              "index.html"
@@ -78,6 +79,12 @@ extern "C" {
 #define SSDP_MANUFACTURER     "Espressif"
 #define SSDP_MANUFACTURER_URL "http://espressif.com/en/products/esp8266/"
 #define SSDP_TTL              2
+
+
+/* VARIABLES EXTERNAL SENSORS */
+#define USE_GPS
+#define USE_BNO055
+
 
 
 
