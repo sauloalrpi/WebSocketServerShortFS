@@ -44,7 +44,7 @@ void   message_websocket_initer(    message* msg ) {
 
   DBG_SERIAL.println ( F("Registering WebSocket") );
   DBG_SERIAL.print   ( F("Port:"                ) );
-  DBG_SERIAL.println ( websocket_data.max_clients );
+  DBG_SERIAL.println ( WEBSOCKET_PORT             );
 
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);

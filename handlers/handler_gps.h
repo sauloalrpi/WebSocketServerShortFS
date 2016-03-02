@@ -40,6 +40,8 @@ SoftwareSerial mySerial1(GPS_RX_PORT, GPS_TX_PORT); // RX, TX
 
 
 void    init_gps();
+void    handleGPSinfo();
+void    handleGPSdata();
 void    message_gps_info_tester(    message* msg );
 void    message_gps_info_initer(    message* msg );
 void    message_gps_info_updater(   message* msg );
@@ -54,7 +56,7 @@ void    message_gps_data_updater(   message* msg );
 void    message_gps_data_printer(   message* msg );
 void    message_gps_data_publisher( message* msg );
 void    message_gps_data_looper(    message* msg );
-
+void    message_gps_data_to_json( message* msg, String& reg );
 
 
 
@@ -86,6 +88,8 @@ void    message_gps_info_initer(    message* msg ) {
   DBG_SERIAL.println(    F("GPS CONNECTED") );
   DBG_SERIAL.flush();
 
+  message_gps_info_updater( msg );
+  
   DBG_SERIAL.println( F("info_gps_init END") );
   DBG_SERIAL.flush();
 }
@@ -135,14 +139,14 @@ void    message_gps_info_looper(    message* msg ) {}
 
 void    message_gps_info_to_json(   message* msg ) {
   DBG_SERIAL.println( F("info_gps_to_json START") );
-    
-  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+  
+  jsonBuffer_t jsonBuffer;
   JsonObject& json  = jsonBuffer.createObject();
   
-  json["_type"] = "gps_info";
+  json["_type"] = "gps/info";
   json["_id"  ] = millis();
 
-  JsonObject& j_gps_info                          = json.createNestedObject("data");
+  JsonObject& j_gps_info                            = json.createNestedObject("data");
 
   j_gps_info[ F("gpsPoolEvery"                  ) ] = info_gps_data.gpsPoolEvery;
   j_gps_info[ F("gpsStartField"                 ) ] = info_gps_data.gpsStartField;
@@ -152,6 +156,7 @@ void    message_gps_info_to_json(   message* msg ) {
   j_gps_info[ F("gpsRxPort"                     ) ] = info_gps_data.gpsRxPort;
   j_gps_info[ F("gpsTxPort"                     ) ] = info_gps_data.gpsTxPort;
   j_gps_info[ F("gpsReadFor"                    ) ] = info_gps_data.gpsReadFor;
+
 
   String text;
   jsonToString(json, text);
@@ -192,7 +197,7 @@ void    message_gps_data_updater(   message* msg ) {
   unsigned long start        = millis();
   bool          hasStarted   = false;
   bool          hasEnded     = false;
-  String        gps_register = "";
+  String        gps_register = "[";
 
   while ((( GPS_SERIAL.available() ) || ( ! hasEnded )) && ((millis() - start) < info_gps_data.gpsReadFor)){
 #ifdef _HANDLER_SERVER_H_
@@ -214,12 +219,11 @@ void    message_gps_data_updater(   message* msg ) {
 
     if ( hasStarted ) {
       line.trim();
-      if (gps_register.length() == 0) {
-        gps_register += line;
-      } else {
-        gps_register += info_gps_data.gpsRegisterFieldSep + line;
+      if (gps_register.length() != 1) {
+        gps_register += ",";
       }
-      //delayy(10);
+      gps_register += "\"" + line + "\"";
+      delayy(0);
       
       if ( line.startsWith(info_gps_data.gpsEndField) ) {
         hasEnded  = true;
@@ -231,12 +235,8 @@ void    message_gps_data_updater(   message* msg ) {
 
   if ( hasEnded ) {
     // DBG_SERIAL.print( "+ " );
-    gps_register = "{\"_type\":\"gps_register\",\"data\":\""+gps_register+"\",\"_sep\":\""+info_gps_data.gpsRegisterFieldSep+"\",\"_id\":"+millis()+"}";
-
-    msg->set_message(gps_register);
-    
-    DBG_SERIAL.println(gps_register);
-
+    gps_register += "]";
+    message_gps_data_to_json(msg, gps_register);
   } else {
     DBG_SERIAL.print( "- " );
   }
@@ -259,6 +259,16 @@ void    message_gps_data_updater(   message* msg ) {
   $GPGSV,4,4,13,32,02,353,20*4F
   $GPGLL,5158.43915,N,00540.36940,E,004936.00,A,A*6B
   */
+}
+
+void    message_gps_data_to_json( message* msg, String& reg ) {
+  String gps_register = "{\"_type\":\"gps/data\",\"_id\":"+String(millis())+",\"data\":{\"register\":"+reg+"}}";
+
+  //,\"sep\":\""+info_gps_data.gpsRegisterFieldSep+"\"
+
+  msg->set_message(gps_register);
+
+  DBG_SERIAL.println(gps_register);
 }
 
 void    message_gps_data_publisher( message* msg ) {
@@ -309,9 +319,36 @@ void    init_gps() {
   message_gps_data_msg              = message("GPS Data", info_gps_data.gpsPoolEvery, -1, message_gps_data_funcs);
   messages.push_back( &message_gps_data_msg );
 
+  
+  DBG_SERIAL.println( F("Registering /gps/info") );
+  server.on( "/gps/info", HTTP_GET   , handleGPSinfo);
+
+  DBG_SERIAL.println( F("Registering /gps/data") );
+  server.on( "/gps/data", HTTP_GET   , handleGPSdata);
+
+  addEndpoint("GPS Info","gps/info","GET","","");
+  addEndpoint("GPS Data","gps/data","GET","","");
+  
   DBG_SERIAL.println( F("init_gps END") );
   DBG_SERIAL.flush();
 }
+
+void handleGPSinfo () {
+  String res;
+  message_to_json( message_gps_info_msg, res );
+  
+  server.send( 200, "application/json", res );
+}
+
+void handleGPSdata () {
+  String res;
+  message_to_json( message_gps_data_msg, res );
+  
+  server.send( 200, "application/json", res );
+}
+
+
+
 
 #endif //ifdef USE_GPS
 

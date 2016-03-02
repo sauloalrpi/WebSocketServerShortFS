@@ -9,7 +9,7 @@ File             fsUploadFile;
 
 
 //"/list"  , HTTP_GET   , handleFileList);
-//"/format", HTTP_GET   , handleFormatting);
+//"/format", HTTP_DELETE, handleFormatting);
 //"/edit"  , HTTP_GET   , handleEdit);
 //"/edit"  , HTTP_PUT   , handleFileCreate);
 //"/edit"  , HTTP_DELETE, handleFileDelete);
@@ -21,69 +21,170 @@ File             fsUploadFile;
 
 
 struct webserver_data_t {
-  uint8_t  message_webserver_id;
-  String   endpoints            = "edit,edit,GET,,|create,edit,PUT,path,|delete,edit,DELETE,path,|format,format,GET,,|list,list,GET,,dir,json|upload,upload,GET,,dir";
-  String   endpoint_order       = "name|endpoint|method|compulsory parameters|optional parameters";
-  String   endpoint_sep         = "|";
-  String   endpoint_field_sep   = ",";
-  bool     busy                 = false;
+  uint8_t        message_webserver_id;
+  string_vec_vec endpoints;
+  String         endpoint_order           = "name,endpoint,method,compulsory parameters,optional parameters";
+  bool           busy                     = false;
+  String         URLinks                  = "";
 };
 webserver_data_t webserver_data;
 message_funcs_t  message_webserver_funcs;
 message          message_webserver_msg;
 
-void   init_webserver();
+void        init_webserver();
 
-void   message_webserver_tester(    message* msg );
-void   message_webserver_init(      message* msg );
-void   message_webserver_updater(   message* msg );
-void   message_webserver_printer(   message* msg );
-void   message_webserver_publisher( message* msg );
-void   message_webserver_looper(    message* msg );
-void   message_webserver_to_json(   message* msg );
+void        handleInfoWebserver();
+
+void        message_webserver_tester(    message* msg );
+void        message_webserver_init(      message* msg );
+void        message_webserver_updater(   message* msg );
+void        message_webserver_printer(   message* msg );
+void        message_webserver_publisher( message* msg );
+void        message_webserver_looper(    message* msg );
+void        message_webserver_to_json(   message* msg );
+
+void        addEndpoint(String name, String endpoint, String method, String compulsory_parameters, String optional_parameters);
+void        getEndPoint( String& ep );
+void        genLinks(String& links);
+void        handleEdit();
+void        handleFileCreate();
+void        handleFileDelete();
+void        handleFileList();
+void        handleFileUploadQuery();
+void        handleFileUploadData();
+void        handleFormattingQuery();
+void        handleFormattingData();
+void        handleUploadPage();
+bool        handleFileRead(    String path);
+void        handleFileListJson(String &dirname);
+void        handleFileListHtml(String &dirname);
+void        handleNotFound();
+const bool  ends_with(String& filename, const char* ext);
+const bool  ends_with(String& filename, String      ext);
+String      formatBytes(size_t bytes);
+String      getContentType(String filename);
+//void       handleRoot();
 
 
-void   handleEdit();
-void   handleFileCreate();
-void   handleFileDelete();
-void   handleFileList();
-void   handleFileUploadQuery();
-void   handleFileUploadData();
-void   handleFormattingQuery();
-void   handleFormattingData();
-void   handleUploadPage();
-bool   handleFileRead(    String path);
-void   handleFileListJson(String &dirname);
-void   handleFileListHtml(String &dirname);
-void   handleNotFound();
-const bool   ends_with(String& filename, const char* ext);
-const bool   ends_with(String& filename, String      ext);
-String formatBytes(size_t bytes);
-String getContentType(String filename);
-//void   handleRoot();
+void        addEndpoint(String name, String endpoint, String method, String compulsory_parameters, String optional_parameters) {
+  DBG_SERIAL.print  ( "addEndpoint :: "          );
+  DBG_SERIAL.print  ( " name: "                  );
+  DBG_SERIAL.print  (   name                     );
+  DBG_SERIAL.print  ( " endpoint: "              );
+  DBG_SERIAL.print  (   endpoint                 );
+  DBG_SERIAL.print  ( " method: "                );
+  DBG_SERIAL.print  (   method                   );
+  DBG_SERIAL.print  ( " compulsory_parameters: " );
+  DBG_SERIAL.print  (   compulsory_parameters    );
+  DBG_SERIAL.print  ( " optional_parameters: "   );
+  DBG_SERIAL.println(   optional_parameters      );
+
+  string_vec sv;
+  sv.push_back(name                 );
+  sv.push_back(endpoint             );
+  sv.push_back(method               );
+  sv.push_back(compulsory_parameters);
+  sv.push_back(optional_parameters  );
+
+  webserver_data.endpoints.push_back(sv);
+}
+
+
+void        getEndPoint( String& ep ) {
+  DBG_SERIAL.println( "getEndPoint:" );
+
+  int ce  = 0;
+      ep += "[";
+
+  for (auto& eps: webserver_data.endpoints) {
+    ce += 1;
+    if ( ce != 1 ) {
+      ep += ",";
+    }
+    ep += "[";
+    int cf = 0;
+    DBG_SERIAL.print  ( " field: " );
+    for (auto& f: eps) {
+      DBG_SERIAL.print  ( " " );
+      DBG_SERIAL.print  ( f   );
+
+      cf += 1;
+      if ( cf != 1 ) {
+        ep += ",";
+      }
+      
+      ep += "\"" + f + "\"";
+    }
+    DBG_SERIAL.println( "" );
+    ep += "]";
+  }
+  ep += "]";
+}
+
+
+void        genLinks(String& links) {
+  if ( webserver_data.URLinks.length() != 0 ) {
+    links = webserver_data.URLinks.c_str();
+    return;
+  }
+
+  String       ep;
+  getEndPoint( ep );
+
+  DBG_SERIAL.println( "genLinks: " );
+
+  for (auto& ep: webserver_data.endpoints) {
+    auto& name     = ep[0];
+    auto& endpoint = ep[1];
+    auto& method   = ep[2];
+    if ( method == "GET" ) {
+      webserver_data.URLinks += " | <a href=\""+endpoint+"\">"+name+"</a>";
+    }
+  }
+  webserver_data.URLinks += " | ";
+  
+  links = webserver_data.URLinks.c_str();
+  DBG_SERIAL.print  ( "genLinks: " );
+  DBG_SERIAL.println(     links    );
+}
 
 
 
-void   message_webserver_tester(    message* msg ) {}
 
-void   message_webserver_initer(    message* msg ) {
+
+
+
+
+
+void        message_webserver_tester(     message* msg ) {}
+
+void        message_webserver_initer(     message* msg ) {
   DBG_SERIAL.println( F("message_webserver_init START") );
 
   DBG_SERIAL.println( F("Registering WebServer") );
   DBG_SERIAL.print  ( F("Port:"                ) );
   DBG_SERIAL.println( WEBSERVER_PORT             );
 
-  //                                   name, endpoint, method, compulsory parameters, optional parameters
-
   //SERVER INIT
   server.on( "/edit"  , HTTP_GET   , handleEdit                                  ); // load editor
   server.on( "/edit"  , HTTP_PUT   , handleFileCreate                            ); // create file
   server.on( "/edit"  , HTTP_DELETE, handleFileDelete                            ); // delete file
   server.on( "/edit"  , HTTP_POST  , handleFileUploadQuery, handleFileUploadData ); // first callback is called after the request has ended with all parsed arguments second callback handles file uploads at that location
-  server.on( "/format", HTTP_GET   , handleFormattingQuery, handleFormattingData ); // format
+  server.on( "/format", HTTP_DELETE, handleFormattingQuery, handleFormattingData ); // format
   server.on( "/list"  , HTTP_GET   , handleFileList                              ); // list directory
   server.on( "/upload", HTTP_GET   , handleUploadPage                            ); // upload page
+  
   server.onNotFound(handleNotFound); //called when the url is not defined here use it to load content from SPIFFS
+
+  addEndpoint( "edit"  ,"edit"  ,"GET"   ,""    ,""         );
+  addEndpoint( "create","edit"  ,"PUT"   ,"path",""         );
+  addEndpoint( "delete","edit"  ,"DELETE","path",""         );
+  addEndpoint( "format","format","DELETE",""    ,""         );
+  addEndpoint( "list"  ,"list"  ,"GET"   ,""    ,"dir,json" );
+  addEndpoint( "upload","upload","GET"   ,""    ,"dir"      );
+
+  message_webserver_updater( msg );
+  
   server.begin();
 
 
@@ -91,31 +192,34 @@ void   message_webserver_initer(    message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void   message_webserver_updater(    message* msg )  {
+void        message_webserver_updater(    message* msg ) {
   DBG_SERIAL.println( F("message_webserver_updater START") );
+  
+  message_webserver_to_json( msg );
+  
   DBG_SERIAL.println( F("message_webserver_updater END") );
   DBG_SERIAL.flush();
 }
 
-void   message_webserver_printer(    message* msg ) {
+void        message_webserver_printer(    message* msg ) {
   DBG_SERIAL.println( F("message_webserver_printer START") );
   
-  DBG_SERIAL.print( F("endpoints                               : ")); DBG_SERIAL.println(webserver_data.endpoints         );
-  DBG_SERIAL.print( F("endpoint_order                          : ")); DBG_SERIAL.println(webserver_data.endpoint_order    );
-  DBG_SERIAL.print( F("endpoint_sep                            : ")); DBG_SERIAL.println(webserver_data.endpoint_sep      );
-  DBG_SERIAL.print( F("endpoint_field_sep                      : ")); DBG_SERIAL.println(webserver_data.endpoint_field_sep);
-  DBG_SERIAL.print( F("busy                                    : ")); DBG_SERIAL.println(webserver_data.busy              );
+  String ep;
+  getEndPoint( ep );
+  DBG_SERIAL.print  ( F("endpoints                               : ")); DBG_SERIAL.println(ep                               );
+  DBG_SERIAL.print  ( F("endpoint_order                          : ")); DBG_SERIAL.println(webserver_data.endpoint_order    );
+  DBG_SERIAL.print  ( F("busy                                    : ")); DBG_SERIAL.println(webserver_data.busy              );
 
   DBG_SERIAL.println( F("message_webserver_printer END") );
   DBG_SERIAL.flush();
 }
 
-void   message_webserver_publisher(    message* msg ) {
+void        message_webserver_publisher(  message* msg ) {
   DBG_SERIAL.println( F("message_webserver_publisher START") );
   
   String text;
   msg->pop_message(text);
-  DBG_SERIAL.print("message_webserver_publisher");
+  DBG_SERIAL.print(  "message_webserver_publisher" );
   DBG_SERIAL.println(text);
 
 #ifdef _HANDLER_WEBSOCKET_H_
@@ -126,32 +230,88 @@ void   message_webserver_publisher(    message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void   message_webserver_looper(    message* msg ) {
+void        message_webserver_looper(     message* msg ) {
 //  DBG_SERIAL.println( F("message_webserver_looper START") );
   server.handleClient();
 //  DBG_SERIAL.println( F("message_webserver_looper END") );
 //  DBG_SERIAL.flush();
 }
 
-void   message_webserver_to_json(    message* msg ) {
+void        message_webserver_to_json(    message* msg ) {
   DBG_SERIAL.println( F("message_webserver_to_json START") );
+  DBG_SERIAL.flush();
 
-  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+  jsonBuffer_t        jsonBuffer;
   JsonObject& json  = jsonBuffer.createObject();
 
-  message_webserver_updater(msg);
+  /*
+  String eps;
+  getEndPoint(eps);
+  jsonBuffer_t        jsonBuffer2;
   
-  json["_type"] = "webserver_info";
-  json["_id"  ] = millis();
+  char *epsC = new char[eps.length()+1];
+  epsC[eps.length()]=0;
+  memcpy(epsC,eps.c_str(),eps.length());
+  
+  DBG_SERIAL.println( eps  );
+  DBG_SERIAL.println( epsC );
+  DBG_SERIAL.flush();
+  
+  
+  JsonArray& epsA  = jsonBuffer2.parseArray(epsC);
+  
+  if ( ! epsA.success() ) {
+    DBG_SERIAL.println( F("FAILED TO PARSE") );
+    DBG_SERIAL.flush();
+  } else {
+    DBG_SERIAL.println( F("SUCCESS PARSING") );
+    DBG_SERIAL.flush();
+  }
+  */
+  
 
-  JsonObject& j_info                             = json  .createNestedObject("data"  );
+  /*
+  JsonArray&  eps   = jsonBuffer.createArray();
+  JsonObject& epo   = jsonBuffer.createObject();
+  
+  getEndPoint(&jsonBuffer, &eps);
+  delay(0);
+  
+  String textA;
+  char temp[JSON_BUFFER_SIZE];
+  json.printTo(temp, sizeof(temp)); 
+  textA += temp;
+  DBG_SERIAL.println( textA );
+  DBG_SERIAL.flush();
+  delay(0);
+  */
+  
+  json["_type"]     = "webserver/info";
+  json["_id"  ]     = millis();  
 
-  j_info[ F("endpoints"                         )] = webserver_data.endpoints;
-  j_info[ F("endpoint_order"                    )] = webserver_data.endpoint_order;
-  j_info[ F("endpoint_sep"                      )] = webserver_data.endpoint_sep;
-  j_info[ F("endpoint_field_sep"                )] = webserver_data.endpoint_field_sep;
-  j_info[ F("busy"                              )] = webserver_data.busy;
+  JsonObject& j_info                               = json.createNestedObject("data");
 
+  JsonArray&  epa   = jsonBuffer.createArray();
+  DBG_SERIAL.println( "getEndPoint:" );
+  for (auto& eps: webserver_data.endpoints) {
+    JsonArray&  epf = jsonBuffer.createArray();
+    DBG_SERIAL.print  ( " fields: " );
+    for (auto& f: eps) {
+      DBG_SERIAL.print( " " );
+      DBG_SERIAL.print( f   );
+      epf.add(f);
+    }
+    DBG_SERIAL.println( "" );
+    DBG_SERIAL.flush();
+    delay(0);
+    epa.add(epf);
+  }
+
+  
+  
+  j_info[ F("endpoints"                        ) ] = epa;
+  j_info[ F("endpointOrder"                    ) ] = webserver_data.endpoint_order;
+  
   String text;
   jsonToString(json, text);
   msg->set_message(text);
@@ -174,16 +334,24 @@ void   init_webserver() {
   message_webserver_funcs.updater     = message_webserver_updater  ;
   message_webserver_funcs.looper      = message_webserver_looper   ;
   webserver_data.message_webserver_id = messages.size();
-  message_webserver_msg               = message("Webserver Info", -1, 0, message_webserver_funcs);
+  message_webserver_msg               = message("Webserver Info", -1, 0, message_webserver_funcs, true);
   messages.push_back( &message_webserver_msg );
+
+  DBG_SERIAL.println( F("Registering /webserver/info") );
+  server.on( "/webserver/info", HTTP_GET   , handleInfoWebserver );
+
+  addEndpoint("Webserver Info","webserver/info","GET","","");
 
   DBG_SERIAL.println( F("init_webserver END") );
 }
 
 
-
-
-
+void handleInfoWebserver() {
+  String res;
+  message_to_json( message_webserver_msg, res );
+  
+  server.send( 200, "application/json", res );
+}
 
 
 
@@ -234,10 +402,14 @@ void   handleFileDelete() {
   String path = server.arg("path");
 
   DBG_SERIAL.println("handleFileDelete: " + path);
-  if(path == "/")
+  if(path == "/") {
     return server.send(500, "text/plain", "BAD PATH");
-  if(!SPIFFS.exists(path))
+  }
+  
+  if(!SPIFFS.exists(path)) {
     return server.send(404, "text/plain", "FileNotFound");
+  }
+  
   SPIFFS.remove(path);
   server.send(200, "text/plain", "");
   path = String();
@@ -262,9 +434,10 @@ void   handleFileList() {
   }  
 }
 
-
 void   handleFileUploadQuery() {
-  server.send(200, "text/html", F("<html><body>Uploading</br><a href=\"list?dir=/\">List</a> | <a href=\"stats\">Stats</a></body></html>"));
+  String links = "";
+  genLinks(links);
+  server.send(200, "text/html", "<html><body>Uploading</br>"+links+"</body></html>");
 }
 
 void   handleFileUploadData() {
@@ -290,17 +463,23 @@ void   handleFileUploadData() {
   } else if(upload.status == UPLOAD_FILE_WRITE){
     //DBG_SERIAL.print("handleFileUpload Data: "); 
     DBG_SERIAL.println(upload.currentSize);
-    if(fsUploadFile)
+    
+    if(fsUploadFile) {
       fsUploadFile.write(upload.buf, upload.currentSize);
+    }
   } else if(upload.status == UPLOAD_FILE_END){
-    if(fsUploadFile)
+    if(fsUploadFile) {
       fsUploadFile.close();
+    }
+    
     DBG_SERIAL.print("handleFileUpload Size: "); DBG_SERIAL.println(upload.totalSize);
   }
 }
 
 void   handleFormattingQuery() {
-  server.send(200, "text/html", F("<html><body><a href=\"list?dir=/\">List</a><br/><a href=\"all\">All</a>Formatting</body></html>"));
+  String links = "";
+  genLinks(links);
+  server.send(200, "text/html", "<html><body>Formatting<br/>"+links+"</body></html>" );
 }
 
 void   handleFormattingData() {
@@ -315,13 +494,17 @@ void   handleUploadPage() {
     dirname = server.arg("dir");
   }
 
+  String links = "";
+  genLinks(links);
+  
   String html  = "<html><body>";
          html += "<h2>Uploading to: "+dirname+"</h2>";
          html += "<form action=\"edit?dir"+dirname+"\" method=\"post\" enctype=\"multipart/form-data\">Select file to upload: ";
          html += "<input type=\"file\" id=\"path\" name=\"path\"></input>";
          html += "<input type=\"submit\" name=\"send\" value=\"Upload\"></input>";
          html += "</form>";
-         html += "<a href=\"list?dir="+dirname+"\">List</a> | <a href=\"status\">Status</a>";
+         html += "<a href=\"list?dir="+dirname+"\">Refresh</a>";
+         html += links;
          html += "</body></html>";
          
   server.send(200, "text/html", html);
@@ -329,7 +512,7 @@ void   handleUploadPage() {
 }
 
 String getContentType(String filename) {
-       if(server.hasArg("download") ) return "application/octet-stream";
+       if(server.hasArg("download" )) return "application/octet-stream";
   else if(filename.endsWith(".htm" )) return "text/html";
   else if(filename.endsWith(".html")) return "text/html";
   else if(filename.endsWith(".css" )) return "text/css";
@@ -347,10 +530,15 @@ String getContentType(String filename) {
 
 bool   handleFileRead(String path) {
   DBG_SERIAL.println("handleFileRead: " + path);
-  if(path.endsWith("/")) path += "index.html";
+  
+  if(path.endsWith("/")) {
+    path += "index.html";
+  }
+  
   String contentType = getContentType(path);
   String pathWithGz  = path + ".gz";
-  if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)){
+  
+  if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
     if(SPIFFS.exists(pathWithGz))
       path += ".gz";
     File file   = SPIFFS.open(path, "r");
@@ -358,6 +546,7 @@ bool   handleFileRead(String path) {
     file.close();
     return true;
   }
+  
   return false;
 }
 
@@ -366,12 +555,16 @@ void   handleFileListJson(String &dirname) {
   Dir dir = SPIFFS.openDir(dirname);
 
   String output = "[";
-  while(dir.next()){
+  while( dir.next() ) {
     File   entry = dir.openFile("r");
     String fn    = String(entry.name()).substring(1);
     bool isDir   =  false;
     DBG_SERIAL.println("handleFileList HTML :: filename: " + fn);
-    if (output != "[") output += ',';
+    
+    if (output != "[") {
+      output += ',';
+    }
+    
     output += "{\"type\":\"";
     output += (isDir)?"dir":"file";
     output += "\",\"name\":\"";
@@ -414,7 +607,13 @@ void   handleFileListHtml(String &dirname) {
     output           += "</tr>";
     entry.close();
   }
-  output             += "</table></br><a href=\"list?dir=/\">List</a> | <a href=\"upload?dir="+dirname+"\">Upload</a> | <a href=\"info\">info</a> | <a href=\"status\">status</a><br/></body></html>";
+  String links = "";
+  genLinks(links);
+
+  output             += "</table></br><a href=\"list?dir=/\">Refresh</a>";
+  output             += links;
+  //<a href=\"upload?dir="+dirname+"\">Upload</a> | <a href=\"info\">info</a> | <a href=\"status\">status</a>
+  output             += "</body></html>";
   server.send(200, "text/html", output);
 }
 

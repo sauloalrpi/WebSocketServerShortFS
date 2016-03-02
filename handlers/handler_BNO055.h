@@ -64,6 +64,8 @@ void    displaySensorStatus (void);
 void    displaySensorDetails(void);
 
 void    init_BNO055();
+void    handleBNO055Info();
+void    handleBNO055data();
 
 void    message_BNO055_info_tester   ( message* msg );
 void    message_BNO055_info_initer   ( message* msg );
@@ -133,8 +135,6 @@ void    message_BNO055_info_initer(    message* msg ) {
   bno.setExtCrystalUse(true);
   
   message_BNO055_info_updater( msg );
-  
-  info_BNO055_data.last_loop = millis();
 }
 
 
@@ -151,6 +151,8 @@ void    message_BNO055_info_updater(   message* msg ) {
   info_BNO055_data.sensor_min_value  = sensor.min_value;  /**< minimum value of this sensor's value in SI units */
   info_BNO055_data.sensor_resolution = sensor.resolution; /**< smallest difference between two values reported by this sensor */
   info_BNO055_data.sensor_min_delay  = sensor.min_delay;  /**< min delay in microseconds between events. zero = not a constant rate */
+
+  message_BNO055_info_to_json( msg );
 }
 
 void    message_BNO055_info_printer(   message* msg ) {
@@ -167,7 +169,7 @@ void    message_BNO055_info_printer(   message* msg ) {
 
 void    message_BNO055_info_publisher( message* msg ) {
   String text;
-  msg->get_message( text );
+  msg->pop_message( text );
 #ifdef _HANDLER_WEBSOCKET_H_
   webSocket.broadcastTXT( text );
 #else
@@ -180,14 +182,14 @@ void    message_BNO055_info_looper(    message* msg ) {}
 
 void    message_BNO055_info_to_json(   message* msg ) {
   DBG_SERIAL.println( F( "message_BNO055_info_to_json START" ) );
-    
-  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+  
+  jsonBuffer_t jsonBuffer;
   JsonObject& json  = jsonBuffer.createObject();
   
-  json["_type"]     = "BNO055_info";
+  json["_type"]     = "BNO055/info";
   json["_id"  ]     = millis();
 
-  JsonObject& j_BNO055_info                    = json.createNestedObject("data"  );
+  JsonObject& j_BNO055_info                       = json.createNestedObject("data"  );
 
   j_BNO055_info[ F( "poolEvery"               ) ] = info_BNO055_data.poolEvery;
   j_BNO055_info[ F( "sensorName"              ) ] = info_BNO055_data.sensor_name;
@@ -217,7 +219,9 @@ void    message_BNO055_info_to_json(   message* msg ) {
 
 void    message_BNO055_data_tester(    message* msg ) {}
 
-void    message_BNO055_data_initer(    message* msg ) {}
+void    message_BNO055_data_initer(    message* msg ) {
+  info_BNO055_data.last_loop = millis();
+}
 
 void    message_BNO055_data_updater(   message* msg ) {
 #ifdef _HANDLER_SERVER_H_
@@ -233,7 +237,7 @@ void    message_BNO055_data_updater(   message* msg ) {
   }
 #endif
 
-  message_BNO055_info_to_json(msg);
+  message_BNO055_data_to_json(msg);
 }
 
 void    message_BNO055_data_printer(   message* msg ) {}
@@ -253,12 +257,12 @@ void    message_BNO055_data_looper(    message* msg ) {}
 
 void    message_BNO055_data_to_json(   message* msg ) {
   DBG_SERIAL.println( F("message_BNO055_info_to_json START") );
-    
-  StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer;
+  
+  jsonBuffer_t jsonBuffer;
   JsonObject& json  = jsonBuffer.createObject();
   
-  json["_type"] = "BNO055_data";
-  json["_id"  ] = millis();
+  json["_type"]     = "BNO055/data";
+  json["_id"  ]     = millis();
 
   JsonObject& j_BNO055_data                    = json.createNestedObject("data");
 
@@ -275,7 +279,7 @@ void    message_BNO055_data_to_json(   message* msg ) {
   */
   j_BNO055_data[ F("systemStatus"               ) ] = system_status;
   j_BNO055_data[ F("selfTestResults"            ) ] = self_test_results;
-  j_BNO055_data[ F("system_error"               ) ] = system_error;
+  j_BNO055_data[ F("systemError"                ) ] = system_error;
   
   
   
@@ -294,17 +298,15 @@ void    message_BNO055_data_to_json(   message* msg ) {
   }
 
   /* Display the individual values */
-  DBG_SERIAL.print(system, DEC);
-  DBG_SERIAL.print(gyro  , DEC);
-  DBG_SERIAL.print(accel , DEC);
-  DBG_SERIAL.print(mag   , DEC);
+  DBG_SERIAL.print( system, DEC );
+  DBG_SERIAL.print( gyro  , DEC );
+  DBG_SERIAL.print( accel , DEC );
+  DBG_SERIAL.print( mag   , DEC );
   
   j_BNO055_data[ F("calibrationSystem"               ) ] = system;
   j_BNO055_data[ F("calibrationGyro"                 ) ] = gyro;
   j_BNO055_data[ F("calibrationAccel"                ) ] = accel;
   j_BNO055_data[ F("calibrationMag"                  ) ] = mag;
-  
-  
   
   
   sensors_event_t event;
@@ -369,17 +371,40 @@ void    init_BNO055() {
   message_BNO055_data_funcs.updater            = message_BNO055_data_updater  ;
   message_BNO055_data_funcs.looper             = message_BNO055_data_looper   ;
   info_BNO055_data.message_BNO055_data_id      = messages.size();
-  message_BNO055_data_msg                      = message("BNO055 Data", -1, -1, message_BNO055_data_funcs, true);
+  message_BNO055_data_msg                      = message("BNO055 Data", -1, -1, message_BNO055_data_funcs);
   messages.push_back( &message_BNO055_data_msg );  
 
   
+  
+  DBG_SERIAL.println( F("Registering /BNO055/info") );
+  server.on( "/BNO055/info", HTTP_GET   , handleBNO055Info);
+
+  DBG_SERIAL.println( F("Registering /BNO055/data") );
+  server.on( "/BNO055/data", HTTP_GET   , handleBNO055data);
+
+  //String   endpoint_order       = "name|endpoint|method|compulsory parameters|optional parameters";
+  
+  addEndpoint("BNO055 Info","BNO055/info","GET","","");
+  addEndpoint("BNO055 Data","BNO055/data","GET","","");
+
   DBG_SERIAL.println( F("init_BNO055 END") );
   DBG_SERIAL.flush();
 }
 
 
+void handleBNO055Info () {
+  String res;
+  message_to_json( message_BNO055_info_msg, res );
+  
+  server.send( 200, "application/json", res );
+}
 
+void handleBNO055data () {
+  String res;
+  message_to_json( message_BNO055_data_msg, res );
 
+  server.send( 200, "application/json", res );
+}
 
 
 

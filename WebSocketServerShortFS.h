@@ -42,7 +42,7 @@ extern "C" {
 
 /* VARIABLES */
 #include "personal.h"
-#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.4"
+#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.5"
 
 /* VARIABLES - WIFI */
 #ifndef WIFI_SSID
