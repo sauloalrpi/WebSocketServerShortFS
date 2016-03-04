@@ -16,7 +16,7 @@ void   jsonToString(JsonObject& json, String& msg);
 void   delayy(int d) {
   unsigned long start = millis();
   while( (millis() - start) < d ) {
-    yield();
+    //yield();
     delay(0);
   }
 }

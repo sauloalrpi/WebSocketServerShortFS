@@ -56,7 +56,7 @@ void    message_gps_data_updater(   message* msg );
 void    message_gps_data_printer(   message* msg );
 void    message_gps_data_publisher( message* msg );
 void    message_gps_data_looper(    message* msg );
-void    message_gps_data_to_json( message* msg, String& reg );
+void    message_gps_data_to_json(   message* msg, String& reg );
 
 
 
@@ -210,7 +210,7 @@ void    message_gps_data_updater(   message* msg ) {
     // DBG_SERIAL.print( "line: " );
     // DBG_SERIAL.println( line );
     //delayy(10);
-    yield();
+    delay(0);
     if ( line.startsWith(info_gps_data.gpsStartField) ) {
       hasStarted = true;
       // DBG_SERIAL.println( "hasStarted" );
@@ -320,14 +320,14 @@ void    init_gps() {
   messages.push_back( &message_gps_data_msg );
 
   
+  
   DBG_SERIAL.println( F("Registering /gps/info") );
-  server.on( "/gps/info", HTTP_GET   , handleGPSinfo);
+  addEndpoint("GPS Info", "/gps/info", "", "", HTTP_GET, handleGPSinfo);
 
   DBG_SERIAL.println( F("Registering /gps/data") );
-  server.on( "/gps/data", HTTP_GET   , handleGPSdata);
+  addEndpoint("GPS Data", "/gps/data", "", "", HTTP_GET, handleGPSdata);
 
-  addEndpoint("GPS Info","gps/info","GET","","");
-  addEndpoint("GPS Data","gps/data","GET","","");
+
   
   DBG_SERIAL.println( F("init_gps END") );
   DBG_SERIAL.flush();

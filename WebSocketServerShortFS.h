@@ -1,6 +1,16 @@
 #ifndef _WEBSOCKERSERVERSHORTFS_H_
 #define _WEBSOCKERSERVERSHORTFS_H_
 
+
+/* VARIABLES - DEBUG */
+#define DBG_SET_DEBUG
+#define DBG_BAUDRATE         115200
+
+
+/* IMPORTS - LOCAL */
+#include "dummy_serial.h"
+
+
 /* IMPORTS */
 extern "C" {
 #include "user_interface.h"
@@ -22,6 +32,17 @@ extern "C" {
 #include <FS.h>
 
 
+
+#ifdef  DBG_SET_DEBUG
+#define DBG_SERIAL             Serial
+#else
+#define DBG_SERIAL      dummySerial()
+#endif
+
+#define DEBUG_ESP_PORT     DBG_SERIAL
+
+
+
 /* IMPORTS - ESP8266 CORE */
 //http://esp8266.github.io/Arduino/versions/2.0.0/doc/reference.html
 #include <ESP8266WiFi.h>
@@ -31,9 +52,12 @@ extern "C" {
 #include <WiFiClient.h>
 
 
+#define __ESP8266_VERSION__     "2.1.0"
+#define __BNO055_VERSION__      "1.1.1"
+#define __ARDUINOJSON_VERSION__ "5.1.1"
+#define __WEBSOCKER_VERSION__   "2015_05_20"
+#define __STANDARDCPP_VERSION__ "2013_09_22_af18241"
 
-/* IMPORTS - LOCAL */
-#include "dummy_serial.h"
 
 
 #define QUOTE(...) #__VA_ARGS__
@@ -43,6 +67,7 @@ extern "C" {
 /* VARIABLES */
 #include "personal.h"
 #define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.5"
+
 
 /* VARIABLES - WIFI */
 #ifndef WIFI_SSID
@@ -63,11 +88,6 @@ extern "C" {
 /* VARIABLES - SERVERS */
 #define WEBSERVER_PORT           80
 #define WEBSOCKET_PORT           81
-
-
-/* VARIABLES - DEBUG */
-#define DBG_SET_DEBUG
-#define DBG_BAUDRATE         115200
 
 
 /* VARIABLES SSDP */
@@ -91,11 +111,6 @@ extern "C" {
 #include "tools.h"
 
 
-#ifdef  DBG_SET_DEBUG
-#define DBG_SERIAL             Serial
-#else
-#define DBG_SERIAL      dummySerial()
-#endif
 
 
 /* DEFINITIONS */

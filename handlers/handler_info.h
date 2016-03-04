@@ -8,6 +8,7 @@ struct info_static_data_t {
   uint8_t  info_dynamic_id;
   String   version                = _WEBSOCKETSERVERSHORTFS_VERSION_;
   String   hostname               = WIFI_HOST;
+  String   packages_versions      = String()+"ESP8266 "+__ESP8266_VERSION__+"; BNO055 "+__BNO055_VERSION__+"; WebSocket "+__WEBSOCKER_VERSION__+"; ArduinoJson "+__ARDUINOJSON_VERSION__+"; StandardCPP "+__STANDARDCPP_VERSION__;
   uint32_t jsonBufferSize         = JSON_BUFFER_SIZE;
   uint32_t chipId;
   uint32_t flashChipId;
@@ -178,6 +179,7 @@ void    message_static_info_to_json(    message* msg ) {
 
   j_info[ F("version"                         ) ] = info_static_data.version;
   j_info[ F("mac"                             ) ] = info_static_data.mac;
+  j_info[ F("packagesVersions"                ) ] = info_static_data.packages_versions;
   j_info[ F("chipId"                          ) ] = info_static_data.chipId;
   j_info[ F("flashChipId"                     ) ] = info_static_data.flashChipId;
   j_info[ F("flashChipSize"                   ) ] = info_static_data.flashChipSize;
@@ -385,13 +387,11 @@ void   init_info() {
   
   
   DBG_SERIAL.println( F("Registering /info/static") );
-  server.on( "/info/static" , HTTP_GET   , handleInfoStatic  );
+  addEndpoint("Info Static", "/info/static"  , "", "", HTTP_GET, handleInfoStatic);
 
   DBG_SERIAL.println( F("Registering /info/dynamic") );
-  server.on( "/info/dynamic", HTTP_GET   , handleInfoDynamic );
-
-  addEndpoint("Info Static" ,"info/static" ,"GET","","");
-  addEndpoint("Info Dynamic","info/dynamic","GET","","");
+  addEndpoint("Info Dynamic", "/info/dynamic", "", "", HTTP_GET, handleInfoDynamic);  
+  
   
   
   DBG_SERIAL.println( F("init_info END") );

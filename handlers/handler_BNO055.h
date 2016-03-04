@@ -377,16 +377,13 @@ void    init_BNO055() {
   
   
   DBG_SERIAL.println( F("Registering /BNO055/info") );
-  server.on( "/BNO055/info", HTTP_GET   , handleBNO055Info);
+  addEndpoint("BNO055 Info", "/BNO055/info", "", "", HTTP_GET, handleBNO055Info);
 
   DBG_SERIAL.println( F("Registering /BNO055/data") );
-  server.on( "/BNO055/data", HTTP_GET   , handleBNO055data);
+  addEndpoint("BNO055 Data", "/BNO055/data", "", "", HTTP_GET, handleBNO055data);
 
-  //String   endpoint_order       = "name|endpoint|method|compulsory parameters|optional parameters";
+
   
-  addEndpoint("BNO055 Info","BNO055/info","GET","","");
-  addEndpoint("BNO055 Data","BNO055/data","GET","","");
-
   DBG_SERIAL.println( F("init_BNO055 END") );
   DBG_SERIAL.flush();
 }

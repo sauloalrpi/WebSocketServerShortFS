@@ -137,6 +137,7 @@ class message {
       //test();
       loop();
       update();
+      delay(0);
     }
     void     repr(String  &msg)                              {
       msg += "Name: "   + this->nickname                  +
