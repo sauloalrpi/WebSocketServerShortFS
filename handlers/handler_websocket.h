@@ -22,24 +22,25 @@ message          message_websocket_msg;
 WebSocketsServer webSocket = WebSocketsServer(WEBSOCKET_PORT);
 
 
-void   init_websocket();
+void   init_websocket       ();
+void   server_init_websocket();
 
-void   message_websocket_tester(    message* msg );
-void   message_websocket_initer(    message* msg );
-void   message_websocket_updater(   message* msg );
-void   message_websocket_printer(   message* msg );
+void   message_websocket_tester   ( message* msg );
+void   message_websocket_initer   ( message* msg );
+void   message_websocket_updater  ( message* msg );
+void   message_websocket_looper   ( message* msg );
+void   message_websocket_printer  ( message* msg );
 void   message_websocket_publisher( message* msg );
-void   message_websocket_looper(    message* msg );
-void   message_websocket_to_json(   message* msg );
+void   message_websocket_to_json  ( message* msg );
 
 void   webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght);
-void   broadcast_json(JsonObject& json);
+//void   broadcast_json(JsonObject& json);
 //void   send_info_json();
 
 
-void   message_websocket_tester(    message* msg ) {}
+void   message_websocket_tester   ( message* msg ) {}
 
-void   message_websocket_initer(    message* msg ) {
+void   message_websocket_initer   ( message* msg ) {
   DBG_SERIAL.println( F("message_websocket_init START") );
 
   DBG_SERIAL.println ( F("Registering WebSocket") );
@@ -53,13 +54,20 @@ void   message_websocket_initer(    message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void   message_websocket_updater(   message* msg ) {
+void   message_websocket_updater  ( message* msg ) {
   DBG_SERIAL.println( F("message_websocket_updater START") );
   DBG_SERIAL.println( F("message_websocket_updater END") );
   DBG_SERIAL.flush();
 }
 
-void   message_websocket_printer(   message* msg ) {
+void   message_websocket_looper   ( message* msg ) {
+//  DBG_SERIAL.println( F("message_websocket_looper START") );
+  webSocket.loop();
+//  DBG_SERIAL.println( F("message_websocket_looper END") );
+//  DBG_SERIAL.flush();
+}
+
+void   message_websocket_printer  ( message* msg ) {
   DBG_SERIAL.println( F("message_websocket_printer START") );
   
   DBG_SERIAL.print( F("max_clients                             : ")); DBG_SERIAL.println(websocket_data.max_clients);
@@ -77,22 +85,13 @@ void   message_websocket_publisher( message* msg ) {
   DBG_SERIAL.print("message_websocket_publisher");
   DBG_SERIAL.println(text);
 
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#endif
+  broadcastMessage( text );
 
   DBG_SERIAL.println( F("message_websocket_publisher END") );
   DBG_SERIAL.flush();
 }
 
-void   message_websocket_looper(    message* msg ) {
-//  DBG_SERIAL.println( F("message_websocket_looper START") );
-  webSocket.loop();
-//  DBG_SERIAL.println( F("message_websocket_looper END") );
-//  DBG_SERIAL.flush();
-}
-
-void   message_websocket_to_json(   message* msg ) {
+void   message_websocket_to_json  ( message* msg ) {
   DBG_SERIAL.println( F("message_websocket_to_json START") );
 
   message_websocket_updater(msg);
@@ -103,7 +102,7 @@ void   message_websocket_to_json(   message* msg ) {
   json["_type"] = "websocket_info";
   json["_id"  ] = millis();
 
-  JsonObject& j_info                             = json  .createNestedObject("data"  );
+  JsonObject& j_info                                 = json  .createNestedObject("data"  );
 
   j_info[ F("max_clients"                         )] = websocket_data.max_clients;
   j_info[ F("has_client"                          )] = websocket_data.has_client;
@@ -133,14 +132,28 @@ void   init_websocket() {
   message_websocket_msg               = message("Websocket Info", -1, 0, message_websocket_funcs);
   messages.push_back( &message_websocket_msg );
   
+  server_init_websocket();
+  
   DBG_SERIAL.println( F("init_websocket END") );
   DBG_SERIAL.flush();
 }
 
 
 
+#ifndef _HANDLER_SERVER_H_
+void    server_init_websocket() {}
+#else
+void    handleWebsocketInfo  ();
 
+void server_init_websocket   () {
+  DBG_SERIAL.println( F("Registering /websocket/info") );
+  addEndpoint("Websocket Info" , "/websocket/info" , "", "", HTTP_GET, handleWebsocketInfo );
+}
 
+void   handleWebsocketInfo   () {
+  server_send_message( message_websocket_msg );
+}
+#endif
 
 
 
@@ -206,6 +219,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 }
 
 
+/*
 void broadcast_json(JsonObject& json) {
   DBG_SERIAL.println( F("broadcast_json") );
   
@@ -223,14 +237,14 @@ void broadcast_json(JsonObject& json) {
   DBG_SERIAL.println( temp );
   DBG_SERIAL.flush();
 
-  
-  webSocket.broadcastTXT( temp, len );
+  broadcastMessage( text );
+  //webSocket.broadcastTXT( temp, len );
   //delayy(100);
 
   DBG_SERIAL.println(   F("SENT") );
   DBG_SERIAL.flush();
 }
-
+*/
 
 /*
 void send_info_json() {  

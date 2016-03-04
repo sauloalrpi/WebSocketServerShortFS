@@ -47,32 +47,30 @@ message             message_dynamic_info_msg;
 
 
 void    init_info();
+void    server_init_info();
 
-void    message_static_info_tester(     message* msg );
-void    message_static_info_initer(     message* msg );
-void    message_static_info_updater(    message* msg );
-void    message_static_info_printer(    message* msg );
-void    message_static_info_publisher(  message* msg );
-void    message_static_info_looper(     message* msg );
-void    message_static_info_to_json(    message* msg );
+void    message_static_info_tester    ( message* msg );
+void    message_static_info_initer    ( message* msg );
+void    message_static_info_updater   ( message* msg );
+void    message_static_info_looper    ( message* msg );
+void    message_static_info_printer   ( message* msg );
+void    message_static_info_publisher ( message* msg );
+void    message_static_info_to_json   ( message* msg );
 
-void    message_dynamic_info_tester(    message* msg );
-void    message_dynamic_info_initer(    message* msg );
-void    message_dynamic_info_updater(   message* msg );
-void    message_dynamic_info_printer(   message* msg );
+void    message_dynamic_info_tester   ( message* msg );
+void    message_dynamic_info_initer   ( message* msg );
+void    message_dynamic_info_updater  ( message* msg );
+void    message_dynamic_info_looper   ( message* msg );
+void    message_dynamic_info_printer  ( message* msg );
 void    message_dynamic_info_publisher( message* msg );
-void    message_dynamic_info_looper(    message* msg );
-void    message_dynamic_info_to_json(   message* msg );
+void    message_dynamic_info_to_json  ( message* msg );
 
 
-void    handleInfoStatic();
-void    handleInfoDynamic();
-//static void   updateExtraInfo();
 
 
-void    message_static_info_tester(     message* msg ) {}
+void    message_static_info_tester    ( message* msg ) {}
 
-void    message_static_info_initer(     message* msg ) {
+void    message_static_info_initer    ( message* msg ) {
   DBG_SERIAL.println( F("info_static_init START") );
 
   message_static_info_updater(    msg );
@@ -81,7 +79,7 @@ void    message_static_info_initer(     message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void    message_static_info_updater(    message* msg ) {
+void    message_static_info_updater   ( message* msg ) {
   DBG_SERIAL.println( F("info_static_updater START") );
   
   FlashMode_t    ideMode                            = ESP.getFlashChipMode();
@@ -109,7 +107,9 @@ void    message_static_info_updater(    message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void    message_static_info_printer(    message* msg ) {
+void    message_static_info_looper    ( message* msg ) {}
+
+void    message_static_info_printer   ( message* msg ) {
   //DBG_SERIAL.println( F("info_static_printer START") );
   
   DBG_SERIAL.print( F("Version                             : ") ); DBG_SERIAL.println( info_static_data.version                         );
@@ -146,25 +146,19 @@ void    message_static_info_printer(    message* msg ) {
   DBG_SERIAL.flush();
 }
 
-void    message_static_info_publisher(  message* msg ) {
+void    message_static_info_publisher ( message* msg ) {
 //  DBG_SERIAL.println( F("info_static_publisher START") );
   
   String text;
   msg->pop_message(text);
 
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#else
-  DBG_SERIAL.print("info_static_publisher");
-  DBG_SERIAL.println(text);
-#endif
+  broadcastMessage( text );
+
 //  DBG_SERIAL.println( F("info_static_publisher END") );
 //  DBG_SERIAL.flush();
 }
 
-void    message_static_info_looper(     message* msg ) {}
-
-void    message_static_info_to_json(    message* msg ) {
+void    message_static_info_to_json   ( message* msg ) {
   DBG_SERIAL.println( F("info_static_to_json START") );
 
   jsonBuffer_t jsonBuffer;
@@ -213,12 +207,9 @@ void    message_static_info_to_json(    message* msg ) {
 
 
 
+void    message_dynamic_info_tester   ( message* msg ) {}
 
-
-
-void    message_dynamic_info_tester(    message* msg ) {}
-
-void    message_dynamic_info_initer(    message* msg ) {
+void    message_dynamic_info_initer   ( message* msg ) {
 //  DBG_SERIAL.println( F("info_dynamic_init START") );
 
   message_dynamic_info_updater(msg);
@@ -227,7 +218,7 @@ void    message_dynamic_info_initer(    message* msg ) {
 //  DBG_SERIAL.flush();
 }
 
-void    message_dynamic_info_updater(   message* msg ) {
+void    message_dynamic_info_updater  ( message* msg ) {
 //  DBG_SERIAL.println( F("info_dynamic_updater START") );
 
   String duration1 = "";
@@ -266,14 +257,14 @@ void    message_dynamic_info_updater(   message* msg ) {
 //  DBG_SERIAL.flush();
 }
 
-void    message_dynamic_info_printer(   message* msg ) {
+void    message_dynamic_info_printer  ( message* msg ) {
 //  DBG_SERIAL.println( F("info_dynamic_printer START") );
   
   DBG_SERIAL.print( F("Free RAM                            : ") ); DBG_SERIAL.print  ( info_dynamic_data.freeRAM                          ); DBG_SERIAL.println( F(" KBytes") );
   DBG_SERIAL.print( F("Free Heap                           : ") ); DBG_SERIAL.println( info_dynamic_data.freeHeap                         );
   DBG_SERIAL.print( F("System Uptime                       : ") ); DBG_SERIAL.println( info_dynamic_data.systemUptime                     ); 
   DBG_SERIAL.print( F("Number of Messages                  : ") ); DBG_SERIAL.println( info_dynamic_data.numMessages                      );
-  DBG_SERIAL.print( F("System Instruction Cycles Per Second: ") ); DBG_SERIAL.println( info_dynamic_data.systemInstructionCyclesPerSecond );  
+  DBG_SERIAL.print( F("System Instruction Cycles Per Second: ") ); DBG_SERIAL.println( info_dynamic_data.systemInstructionCyclesPerSecond );
   
 //  DBG_SERIAL.println( F("info_dynamic_printer END") );
   // DBG_SERIAL.flush();
@@ -285,21 +276,15 @@ void    message_dynamic_info_publisher( message* msg ) {
   String text;
   msg->pop_message(text);
   
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#else
-  DBG_SERIAL.print("info_dynamic_publisher");
-  DBG_SERIAL.println(text);
-  DBG_SERIAL.flush();
-#endif
+  broadcastMessage( text );
 
 //  DBG_SERIAL.println( F("info_dynamic_publisher END") );
 //  DBG_SERIAL.flush();
 }
 
-void    message_dynamic_info_looper(    message* msg ) {  }
+void    message_dynamic_info_looper   ( message* msg ) {}
 
-void    message_dynamic_info_to_json(   message* msg ) {
+void    message_dynamic_info_to_json  ( message* msg ) {
 //  DBG_SERIAL.println( F("info_dynamic_to_json START") );
 
   jsonBuffer_t jsonBuffer;
@@ -325,38 +310,11 @@ void    message_dynamic_info_to_json(   message* msg ) {
 }
 
 
-/*
-static void   updateExtraInfo() {
-  uint8_t fid = 0;
-  for (auto m: messages) {
-    if ( messages[fid].pool ) {
-      if ( messages[fid].update_every != 0 ) {
-        if (( messages[fid].last_update == 0 ) || ((millis() - messages[fid].last_update) >= messages[fid].update_every)) {
-          jsonBuffer_t jsonBuffer;
-          JsonObject& json  = jsonBuffer.createObject();
-          String msg;
-          m.toJson(json);
-          jsonToString(json, msg);
-          messages[fid].message      = msg.c_str();
-          messages[fid].updated      = true;
-          messages[fid].last_update  = millis();
-        }
-      }
-    }
-    fid++;
-  }
-}
-*/
 
 
 
 
-
-
-
-
-
-void   init_info() {
+void    init_info() {
   DBG_SERIAL.println( F("init_info START") );
   
   message_static_info_funcs.tester     = message_static_info_tester   ;
@@ -383,36 +341,34 @@ void   init_info() {
   message_dynamic_info_msg             = message( "Dynamic Info", 10000, -1, message_dynamic_info_funcs, true, true );
   DBG_SERIAL.println( F("init_info PUSHING dynamic") ); DBG_SERIAL.flush();
   messages.push_back( &message_dynamic_info_msg );
-
   
-  
-  DBG_SERIAL.println( F("Registering /info/static") );
-  addEndpoint("Info Static", "/info/static"  , "", "", HTTP_GET, handleInfoStatic);
-
-  DBG_SERIAL.println( F("Registering /info/dynamic") );
-  addEndpoint("Info Dynamic", "/info/dynamic", "", "", HTTP_GET, handleInfoDynamic);  
-  
-  
+  server_init_info();
   
   DBG_SERIAL.println( F("init_info END") );
   DBG_SERIAL.flush();
 }
 
+#ifndef _HANDLER_SERVER_H_
+void    server_init_info() {}
+#else
+void    handleInfoStatic();
+void    handleInfoDynamic();
 
+void    server_init_info() {
+  DBG_SERIAL.println( F("Registering /info/static") );
+  addEndpoint("Info Static" , "/info/static" , "", "", HTTP_GET, handleInfoStatic );
 
-
-void   handleInfoStatic() {
-  String res;
-  message_to_json( message_static_info_msg, res );
-  
-  server.send( 200, "application/json", res );
+  DBG_SERIAL.println( F("Registering /info/dynamic") );
+  addEndpoint("Info Dynamic", "/info/dynamic", "", "", HTTP_GET, handleInfoDynamic);    
 }
 
-void   handleInfoDynamic() {
-  String res;
-  message_to_json( message_dynamic_info_msg, res );
-  
-  server.send( 200, "application/json", res );
+void    handleInfoStatic() {
+  server_send_message( message_static_info_msg );
 }
+
+void    handleInfoDynamic() {
+  server_send_message( message_dynamic_info_msg );
+}
+#endif
 
 #endif //#ifndef _HANDLER_INFO_H_

@@ -19,80 +19,36 @@ webserver_data_t webserver_data;
 message_funcs_t  message_webserver_funcs;
 message          message_webserver_msg;
 
-void        init_webserver();
+void        init_webserver       ();
+void        server_init_webserver();
+void        handleInfoWebserver  ();
 
-void        handleInfoWebserver();
-
-void        message_webserver_tester(    message* msg );
-void        message_webserver_init(      message* msg );
-void        message_webserver_updater(   message* msg );
-void        message_webserver_printer(   message* msg );
+void        message_webserver_tester   ( message* msg );
+void        message_webserver_init     ( message* msg );
+void        message_webserver_updater  ( message* msg );
+void        message_webserver_printer  ( message* msg );
 void        message_webserver_publisher( message* msg );
-void        message_webserver_looper(    message* msg );
-void        message_webserver_to_json(   message* msg );
+void        message_webserver_looper   ( message* msg );
+void        message_webserver_to_json  ( message* msg );
 
-void        addEndpoint(const String                       name                 ,
-                        const String                       endpoint             ,
-                        const String                       compulsory_parameters,
-                        const String                       optional_parameters  ,
-                        HTTPMethod                         method               ,
-                        ESP8266WebServer::THandlerFunction handler
-                        );
-void        addEndpoint(const String                       name                 ,
-                        const String                       endpoint             ,
-                        const String                       compulsory_parameters,
-                        const String                       optional_parameters  ,
-                        HTTPMethod                         method               ,
-                        ESP8266WebServer::THandlerFunction handler              ,
-                        ESP8266WebServer::THandlerFunction handlern
-                        );
-void        addEndpoint(const String                       name                 ,
-                        const String                       endpoint             ,
-                        const String                       compulsory_parameters,
-                        const String                       optional_parameters  ,
-                        HTTPMethod                         method
-                        );
-void        getEndPointsStr( String& ep   );
-void        genLinks(     String& links);
-void        gen_endpoints_json(String& res);
+void        getEndPointsStr            ( String& ep    );
+void        genLinks                   ( String& links );
+void        gen_endpoints_json         ( String& res   );
+
+typedef ESP8266WebServer::THandlerFunction webserver_h_func;
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method, webserver_h_func handler, webserver_h_func handlern );
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method, webserver_h_func handler );
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method );
+
+
+
 
 #include "handler_server_endpoints.h"
 
 
 
 
-
-
-
-
-
-
-void        addEndpoint(const String                       name                      ,
-                        const String                       endpoint                  ,
-                        const String                       compulsory_parameters     ,
-                        const String                       optional_parameters       ,
-                        HTTPMethod                         method                    ,
-                        ESP8266WebServer::THandlerFunction handler
-                        ) {
-  
-  addEndpoint(name                     ,
-              endpoint                 ,
-              compulsory_parameters    ,
-              optional_parameters      ,
-              method
-              );
-  
-  server.on( endpoint.c_str(), method, handler );
-}
-
-void        addEndpoint(const String                       name                      ,
-                        const String                       endpoint                  ,
-                        const String                       compulsory_parameters     ,
-                        const String                       optional_parameters       ,
-                        HTTPMethod                         method                    ,
-                        ESP8266WebServer::THandlerFunction handler                   ,
-                        ESP8266WebServer::THandlerFunction handlern
-                        ) {
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method, webserver_h_func handler, webserver_h_func handlern ) {
   
   addEndpoint(name                     ,
               endpoint                 ,
@@ -104,12 +60,19 @@ void        addEndpoint(const String                       name                 
   server.on( endpoint.c_str(), method, handler, handlern );
 }
 
-void        addEndpoint(const String           name                     ,
-                        const String           endpoint                 ,
-                        const String           compulsory_parameters    ,
-                        const String           optional_parameters      ,
-                        HTTPMethod             method 
-                        ) {
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method, webserver_h_func handler ) {
+  
+  addEndpoint(name                     ,
+              endpoint                 ,
+              compulsory_parameters    ,
+              optional_parameters      ,
+              method
+              );
+  
+  server.on( endpoint.c_str(), method, handler );
+}
+
+void        addEndpoint( const String name, const String endpoint, const String compulsory_parameters, const String optional_parameters, HTTPMethod method ) {
 
   String methodStr = "";
   switch( method ) {
@@ -146,7 +109,9 @@ void        addEndpoint(const String           name                     ,
 }
 
 
-void        getEndPointsStr( String& ep ) {
+
+
+void        getEndPointsStr            ( String& ep    ) {
   DBG_SERIAL.println( "getEndPoints:" );
 
   int ce  = 0;
@@ -180,8 +145,7 @@ void        getEndPointsStr( String& ep ) {
   ep += "]";
 }
 
-
-void        genLinks(String& links) {
+void        genLinks                   ( String& links ) {
   if ( webserver_data.URLinks.length() != 0 ) {
     links = webserver_data.URLinks.c_str();
     return;
@@ -204,108 +168,7 @@ void        genLinks(String& links) {
   DBG_SERIAL.println(     links    );
 }
 
-
-
-
-
-
-
-
-
-void        message_webserver_tester(     message* msg ) {}
-
-void        message_webserver_initer(     message* msg ) {
-  DBG_SERIAL.println( F("message_webserver_init START") );
-
-  DBG_SERIAL.println( F("Registering WebServer") );
-  DBG_SERIAL.print  ( F("Port:"                ) );
-  DBG_SERIAL.println( WEBSERVER_PORT             );
-  
-  //SERVER INIT
-  addEndpoint( "index"    , "/"         , ""    , ""         , HTTP_GET   , handleIndex                                 );
-  addEndpoint( "list"     , "/list"     , ""    , "dir,json" , HTTP_GET   , handleFileList                              );
-  addEndpoint( "upload"   , "/upload"   , ""    , "dir"      , HTTP_GET   , handleUploadPage                            );
-  addEndpoint( "upload"   , "/upload"   , "path", ""         , HTTP_POST  , handleFileUploadQuery, handleFileUploadData );
-  //addEndpoint( "edit"     , "/edit"     , ""    , ""         , HTTP_GET   , handleEdit                                  );
-  addEndpoint( "create"   , "/edit"     , "path", ""         , HTTP_PUT   , handleFileCreate                            );
-  addEndpoint( "delete"   , "/edit"     , "path", ""         , HTTP_DELETE, handleFileDelete                            );
-  addEndpoint( "format"   , "/format"   , ""    , ""         , HTTP_GET   , handleFormatPage                            );
-  addEndpoint( "format"   , "/format"   , ""    , ""         , HTTP_DELETE, handleFormatQuery, handleFormatData         );
-  addEndpoint( "endpoints", "/endpoints", ""    , "json"     , HTTP_GET   , handleEndpoints                             );
-  
-  
-  if(SPIFFS.exists("/favicon.ico")) {
-    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
-  }
-  
-  server.onNotFound(handleNotFound); //called when the url is not defined here use it to load content from SPIFFS
-  
-  message_webserver_updater( msg );
-  
-  server.begin();
-
-  DBG_SERIAL.println( F("message_webserver_init END") );
-  DBG_SERIAL.flush();
-}
-
-void        message_webserver_updater(    message* msg ) {
-  DBG_SERIAL.println( F("message_webserver_updater START") );
-  
-  message_webserver_to_json( msg );
-  
-  DBG_SERIAL.println( F("message_webserver_updater END") );
-  DBG_SERIAL.flush();
-}
-
-void        message_webserver_printer(    message* msg ) {
-  DBG_SERIAL.println( F("message_webserver_printer START") );
-  
-  String ep;
-  getEndPointsStr( ep );
-  DBG_SERIAL.print  ( F("endpoints                               : ")); DBG_SERIAL.println(ep                               );
-  DBG_SERIAL.print  ( F("endpoint_order                          : ")); DBG_SERIAL.println(webserver_data.endpoint_order    );
-  DBG_SERIAL.print  ( F("busy                                    : ")); DBG_SERIAL.println(webserver_data.busy              );
-
-  DBG_SERIAL.println( F("message_webserver_printer END") );
-  DBG_SERIAL.flush();
-}
-
-void        message_webserver_publisher(  message* msg ) {
-  DBG_SERIAL.println( F("message_webserver_publisher START") );
-  
-  String text;
-  msg->pop_message(text);
-  DBG_SERIAL.print(  "message_webserver_publisher" );
-  DBG_SERIAL.println(text);
-
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#endif
-
-  DBG_SERIAL.println( F("message_webserver_publisher END") );
-  DBG_SERIAL.flush();
-}
-
-void        message_webserver_looper(     message* msg ) {
-//  DBG_SERIAL.println( F("message_webserver_looper START") );
-  server.handleClient();
-//  DBG_SERIAL.println( F("message_webserver_looper END") );
-//  DBG_SERIAL.flush();
-}
-
-void        message_webserver_to_json(    message* msg ) {
-  DBG_SERIAL.println( F("message_webserver_to_json START") );
-  DBG_SERIAL.flush();
-  
-  String text;
-  gen_endpoints_json(text);
-  msg->set_message(text);
-
-  DBG_SERIAL.println( F("message_webserver_to_json END") );
-  DBG_SERIAL.flush();  
-}
-
-void        gen_endpoints_json(String& res) {
+void        gen_endpoints_json         ( String& res   ) {
   if (webserver_data.endpoints_json.length() != 0) {
     res += webserver_data.endpoints_json.c_str();
     return;
@@ -361,7 +224,107 @@ void        gen_endpoints_json(String& res) {
 
 
 
-void   init_webserver() {  
+
+
+void        message_webserver_tester   ( message* msg ) {}
+
+void        message_webserver_initer   ( message* msg ) {
+  DBG_SERIAL.println( F("message_webserver_init START") );
+
+  DBG_SERIAL.println( F("Registering WebServer") );
+  DBG_SERIAL.print  ( F("Port:"                ) );
+  DBG_SERIAL.println( WEBSERVER_PORT             );
+  
+  //SERVER INIT
+  addEndpoint( "create"   , "/edit"     , "path", ""         , HTTP_PUT   , handleFileCreate                            );
+  addEndpoint( "delete"   , "/edit"     , "path", ""         , HTTP_DELETE, handleFileDelete                            );
+
+  addEndpoint( "index"    , "/"         , ""    , ""         , HTTP_GET   , handleIndex                                 );
+  addEndpoint( "edit"     , "/edit"     , ""    , ""         , HTTP_GET   , handleEdit                                  );
+
+  addEndpoint( "format"   , "/format"   , ""    , ""         , HTTP_GET   , handleFormatPage                            );
+  addEndpoint( "format"   , "/format"   , ""    , ""         , HTTP_DELETE, handleFormatQuery, handleFormatData         );
+
+  addEndpoint( "upload"   , "/upload"   , ""    , "dir"      , HTTP_GET   , handleFileUploadPage                        );
+  addEndpoint( "upload"   , "/upload"   , "path", ""         , HTTP_POST  , handleFileUploadQuery, handleFileUploadData );
+
+  addEndpoint( "list"     , "/list"     , ""    , "dir,json" , HTTP_GET   , handleFileListPage                          );
+    
+  addEndpoint( "endpoints", "/endpoints", ""    , "json"     , HTTP_GET   , handleEndpointsPage                         );
+  
+  
+  if(SPIFFS.exists("/favicon.ico")) {
+    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+  }
+  
+  server.onNotFound(handleNotFound); //called when the url is not defined here use it to load content from SPIFFS
+  
+  message_webserver_updater( msg );
+  
+  server.begin();
+
+  DBG_SERIAL.println( F("message_webserver_init END") );
+  DBG_SERIAL.flush();
+}
+
+void        message_webserver_updater  ( message* msg ) {
+  DBG_SERIAL.println( F("message_webserver_updater START") );
+  
+  message_webserver_to_json( msg );
+  
+  DBG_SERIAL.println( F("message_webserver_updater END") );
+  DBG_SERIAL.flush();
+}
+
+void        message_webserver_looper   ( message* msg ) {
+//  DBG_SERIAL.println( F("message_webserver_looper START") );
+  server.handleClient();
+//  DBG_SERIAL.println( F("message_webserver_looper END") );
+//  DBG_SERIAL.flush();
+}
+
+void        message_webserver_printer  ( message* msg ) {
+  DBG_SERIAL.println( F("message_webserver_printer START") );
+  
+  String ep;
+  getEndPointsStr( ep );
+  DBG_SERIAL.print  ( F("endpoints                               : ")); DBG_SERIAL.println(ep                               );
+  DBG_SERIAL.print  ( F("endpoint_order                          : ")); DBG_SERIAL.println(webserver_data.endpoint_order    );
+  DBG_SERIAL.print  ( F("busy                                    : ")); DBG_SERIAL.println(webserver_data.busy              );
+
+  DBG_SERIAL.println( F("message_webserver_printer END") );
+  DBG_SERIAL.flush();
+}
+
+void        message_webserver_publisher( message* msg ) {
+  DBG_SERIAL.println( F("message_webserver_publisher START") );
+  
+  String text;
+  msg->pop_message(text);
+  DBG_SERIAL.print(  "message_webserver_publisher" );
+  DBG_SERIAL.println(text);
+
+  broadcastMessage( text );
+
+  DBG_SERIAL.println( F("message_webserver_publisher END") );
+  DBG_SERIAL.flush();
+}
+
+void        message_webserver_to_json  ( message* msg ) {
+  DBG_SERIAL.println( F("message_webserver_to_json START") );
+  DBG_SERIAL.flush();
+  
+  String text;
+  gen_endpoints_json(text);
+  msg->set_message(text);
+
+  DBG_SERIAL.println( F("message_webserver_to_json END") );
+  DBG_SERIAL.flush();  
+}
+
+
+
+void        init_webserver       () {  
   DBG_SERIAL.println( F("init_webserver START") );
   
   message_webserver_funcs.tester      = message_webserver_tester   ;
@@ -374,24 +337,19 @@ void   init_webserver() {
   message_webserver_msg               = message("Webserver Info", -1, 0, message_webserver_funcs, true);
   messages.push_back( &message_webserver_msg );
 
-  
-  
-  DBG_SERIAL.println( F("Registering /webserver/info") );
-  addEndpoint("Webserver Info", "/webserver/info", "", "", HTTP_GET, handleInfoWebserver);
-
-  
+  server_init_webserver();
   
   DBG_SERIAL.println( F("init_webserver END") );
 }
 
-
-void handleInfoWebserver() {
-  String res;
-  message_to_json( message_webserver_msg, res );
-  
-  server.send( 200, "application/json", res );
+void        server_init_webserver() {
+  DBG_SERIAL.println( F("Registering /webserver/info") );
+  addEndpoint("Webserver Info", "/webserver/info", "", "", HTTP_GET, handleInfoWebserver);
 }
 
+void        handleInfoWebserver  () {
+  server_send_message( message_webserver_msg );
+}
 
 
 #endif //ifndef _HANDLER_SERVER_H_

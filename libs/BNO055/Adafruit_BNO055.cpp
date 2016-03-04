@@ -56,35 +56,49 @@ bool Adafruit_BNO055::begin(adafruit_bno055_opmode_t mode)
 {
   /* Enable I2C */
   
+#ifndef ESP8266
+  Wire.begin();
+#else
   Serial.print("Starting I2C: SDA: ");
   Serial.print(_sda);
   Serial.print(" SCL: ");
   Serial.print(_scl);
+  Serial.print(" clock Stretch Limit: ");
+  Serial.print(_clockStretchLimit);
   Serial.println("");
   Serial.flush();
   
   Wire.begin(_sda,_scl);
+  
+  if ( _clockStretchLimit != 0 ) {
+    Wire.setClockStretchLimit(_clockStretchLimit);
+  }
+#endif
 
   /* Make sure we have the right device */
   uint8_t id = read8(BNO055_CHIP_ID_ADDR);
   if(id != BNO055_ID)
   {
+#ifdef ESP8266
     Serial.print("Got wrong ID. Expected: ");
     Serial.print(BNO055_ID);
     Serial.print(" Got : ");
     Serial.print(id);
     Serial.println(". rebooting");
     Serial.flush();
+#endif
 
     delay(1000); // hold on for boot
     id = read8(BNO055_CHIP_ID_ADDR);
     if(id != BNO055_ID) {
+#ifdef ESP8266
       Serial.print("Got wrong ID again. Expected: ");
       Serial.print(BNO055_ID);
       Serial.print(" Got : ");
       Serial.print(id);
       Serial.println(". returning false");
       Serial.flush();
+#endif
       return false;  // still not? ok bail
     }
   }
@@ -134,9 +148,12 @@ bool Adafruit_BNO055::begin(adafruit_bno055_opmode_t mode)
 }
 
 #ifdef ESP8266
-void Adafruit_BNO055::setPorts            ( int sda, int scl ) {
+void Adafruit_BNO055::setPorts             ( int sda, int scl ) {
   _sda = sda;
   _scl = scl;
+}
+void  Adafruit_BNO055::setClockStretchLimit( int clockStretchLimit ) {
+  _clockStretchLimit = clockStretchLimit;
 }
 #endif
 /**************************************************************************/

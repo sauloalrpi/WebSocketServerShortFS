@@ -1,7 +1,6 @@
 //http://forum.arduino.cc/index.php?topic=41665.0
 
-class dummySerial
-{
+class dummySerial {
  private:
    //uint8_t _uart;
    void printNumber(unsigned long, uint8_t);

@@ -1,34 +1,24 @@
 /*
  WebSocketServer.ino
  Created on: 22.05.2015
- 
-  FSWebServer - Example WebServer with SPIFFS backend for esp8266
-  Copyright (c) 2015 Hristo Gochkov. All rights reserved.
-  This file is part of the ESP8266WebServer library for Arduino environment.
- 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  
-  upload the contents of the data folder with MkSPIFFS Tool ("ESP8266 Sketch Data Upload" in Tools menu in Arduino IDE)
-  or you can upload the contents of a folder if you CD in that folder and run the following command:
-  for file in `ls -A1`; do curl -F "file=@$PWD/$file" esp8266fs.local/edit; done
-  
-  access the sample web page at http://esp8266fs.local
-  edit the page by going to http://esp8266fs.local/edit
+
+ access the sample web page at http://esp8266fs.local
+ edit the page by going to http://esp8266fs.local/edit
 */
 
 /* VARIABLES */
 #include "WebSocketServerShortFS.h"
 
+static void init_system();
+static void init_serial();
+static void init_spiffs();
+static void init_wifi();
+static void init_mdns();
+static void init_ssdp();
+
+class   message;
+void broadcastMessage(    String&  text );
+void server_send_message( message& msg  );
 
 #include "messenger.h"
 #include "handlers/handler_websocket.h"
@@ -37,12 +27,29 @@
 #include "handlers/handler_gps.h"
 #include "handlers/handler_BNO055.h"
 
-static void init_system();
-static void init_serial();
-static void init_spiffs();
-static void init_wifi();
-static void init_mdns();
-static void init_ssdp();
+
+void broadcastMessage( String& text ) {
+#ifdef _HANDLER_WEBSOCKET_H_
+  webSocket.broadcastTXT( text );
+#else
+  DBG_SERIAL.print("broadcastMessage");
+  DBG_SERIAL.println(text);
+#endif
+}
+
+
+#ifndef _HANDLER_SERVER_H_
+void server_send_message( message& msg ) {}
+#else
+void server_send_message( message& msg ) {
+  String res;
+  message_to_json( msg, res );
+  server.send( 200, "application/json", res );
+}
+#endif
+
+
+
 
 /* SETUP ... DUH */
 void setup() {
@@ -72,8 +79,8 @@ void setup() {
 #endif
 
 
-#ifdef _HANDLER_BNO055_H_
 #ifdef USE_BNO055
+#ifdef _HANDLER_BNO055_H_
   DBG_SERIAL.println("SETUP GPS");
   init_BNO055();
 #endif
@@ -199,9 +206,11 @@ static void   init_mdns() {
 }
 
 static void   init_ssdp() {
+#ifdef _HANDLER_SERVER_H_
   server.on("/description.xml", HTTP_GET, [](){
     SSDP.schema(server.client());
   });
+#endif
 
   DBG_SERIAL.printf("Starting SSDP...\n");
   SSDP.setSchemaURL(       "description.xml"     );

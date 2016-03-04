@@ -9,30 +9,22 @@ typedef std::function<void()>            func_void_t;
 typedef std::function<void(String&)>     func_string_t;
 typedef std::function<void(message*)>    func_publish_t;
 
-/*
-static void   voidTester()    { DBG_SERIAL.println( "Void Tester"    ); DBG_SERIAL.flush(); };
-static void   voidIniter()    { DBG_SERIAL.println( "Void Initer"    ); DBG_SERIAL.flush(); };
-static void   voidPrinter()   { DBG_SERIAL.println( "Void Printer"   ); DBG_SERIAL.flush(); };
-static void   voidPublisher() { DBG_SERIAL.println( "Void Publisher" ); DBG_SERIAL.flush(); };
-static void   voidUpdater()   { DBG_SERIAL.println( "Void Updater"   ); DBG_SERIAL.flush(); };
-static void   voidLooper()    { DBG_SERIAL.println( "Void Looper"    ); DBG_SERIAL.flush(); };
-*/
 
-void   msgTester(    message* ) { DBG_SERIAL.println( "Void Tester"    ); DBG_SERIAL.flush(); };
-void   msgIniter(    message* ) { DBG_SERIAL.println( "Void Initer"    ); DBG_SERIAL.flush(); };
-void   msgPrinter(   message* ) { DBG_SERIAL.println( "Void Printer"   ); DBG_SERIAL.flush(); };
-void   msgPublisher( message* ) { DBG_SERIAL.println( "Void Publisher" ); DBG_SERIAL.flush(); };
-void   msgUpdater(   message* ) { DBG_SERIAL.println( "Void Updater"   ); DBG_SERIAL.flush(); };
-void   msgLooper(    message* ) { DBG_SERIAL.println( "Void Looper"    ); DBG_SERIAL.flush(); };
+void   msgTester(    message* ) {};
+void   msgIniter(    message* ) {};
+void   msgUpdater(   message* ) {};
+void   msgLooper(    message* ) {};
+void   msgPrinter(   message* ) {};
+void   msgPublisher( message* ) {};
 
 
 struct message_funcs_t {
     func_publish_t tester    = msgTester;
     func_publish_t initer    = msgIniter;
-    func_publish_t printer   = msgPrinter;
-    func_publish_t publisher = msgPublisher;
     func_publish_t updater   = msgUpdater;
     func_publish_t looper    = msgLooper;
+    func_publish_t printer   = msgPrinter;
+    func_publish_t publisher = msgPublisher;
 };
 
 class message {
@@ -196,5 +188,6 @@ void message_to_json( message& msg, String& res ) {
         "}" + \
        "}";
 }
+
 
 #endif //ifndef _messenger_t_H_

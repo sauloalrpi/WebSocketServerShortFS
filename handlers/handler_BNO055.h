@@ -3,9 +3,29 @@
 
 #ifdef  USE_BNO055
 
+#define BNO055_KEEP_UPDATED   true
 #define BNO055_POOL_EVERY      100
 #define BNO055_SDA_PORT          0
 #define BNO055_SCL_PORT          2
+
+
+#ifdef _HANDLER_WEBSOCKET_H_
+#define BNO055_UPDATE_ON_WEBSOCKET  true
+#else
+#define BNO055_UPDATE_ON_WEBSOCKET false
+#endif
+
+#if(BNO055_KEEP_UPDATED)
+#undef BNO055_UPDATE_ON_WEBSOCKET
+#define BNO055_UPDATE_ON_WEBSOCKET false
+#else
+#undef BNO055_UPDATE_ON_WEBSOCKET
+#define BNO055_UPDATE_ON_WEBSOCKET  true
+#endif
+
+
+
+
 
 #include <Wire.h>
 #include "../libs/BNO055/Adafruit_BNO055.h"
@@ -36,22 +56,26 @@ after feb 18 206
 Wire.setClockStretchLimit(8533); // limit in μs
  */
 
+ 
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
 
 struct info_BNO055_t {
   uint8_t       message_BNO055_info_id;
   uint8_t       message_BNO055_data_id;
-  uint32_t      poolEvery              = BNO055_POOL_EVERY;
-  uint32_t      SDAPort                = BNO055_SDA_PORT;
-  uint32_t      SCLPort                = BNO055_SCL_PORT;
-  uint32_t      last_loop              =   0;
+  uint32_t      poolEvery                           = BNO055_POOL_EVERY;
+  uint32_t      SDAPort                             = BNO055_SDA_PORT;
+  uint32_t      SCLPort                             = BNO055_SCL_PORT;
+  uint32_t      last_loop                           =   0;
+  bool          update_only_if_has_websocket_client = BNO055_UPDATE_ON_WEBSOCKET;
 
-  char          sensor_name[12]        =  ""; /**< sensor name */
-  float         sensor_max_value       = 0.0; /**< maximum value of this sensor's value in SI units */
-  float         sensor_min_value       = 0.0; /**< minimum value of this sensor's value in SI units */
-  float         sensor_resolution      = 0.0; /**< smallest difference between two values reported by this sensor */
-  int32_t       sensor_version         =   0; /**< version of the hardware + driver */
-  int32_t       sensor_id              =   0; /**< unique sensor identifier */
-  int32_t       sensor_min_delay       =   0; /**< min delay in microseconds between events. zero = not a constant rate */
+  char          sensor_name[12]                     =  ""; /**< sensor name */
+  float         sensor_max_value                    = 0.0; /**< maximum value of this sensor's value in SI units */
+  float         sensor_min_value                    = 0.0; /**< minimum value of this sensor's value in SI units */
+  float         sensor_resolution                   = 0.0; /**< smallest difference between two values reported by this sensor */
+  int32_t       sensor_version                      =   0; /**< version of the hardware + driver */
+  int32_t       sensor_id                           =   0; /**< unique sensor identifier */
+  int32_t       sensor_min_delay                    =   0; /**< min delay in microseconds between events. zero = not a constant rate */
 };
 info_BNO055_t      info_BNO055_data;
 message_funcs_t    message_BNO055_info_funcs;
@@ -64,35 +88,33 @@ void    displaySensorStatus (void);
 void    displaySensorDetails(void);
 
 void    init_BNO055();
-void    handleBNO055Info();
-void    handleBNO055data();
+void    server_init_BNO055();
 
 void    message_BNO055_info_tester   ( message* msg );
 void    message_BNO055_info_initer   ( message* msg );
 void    message_BNO055_info_updater  ( message* msg );
+void    message_BNO055_info_looper   ( message* msg );
 void    message_BNO055_info_printer  ( message* msg );
 void    message_BNO055_info_publisher( message* msg );
-void    message_BNO055_info_looper   ( message* msg );
 void    message_BNO055_info_to_json  ( message* msg );
 
 void    message_BNO055_data_tester   ( message* msg );
 void    message_BNO055_data_initer   ( message* msg );
 void    message_BNO055_data_updater  ( message* msg );
+void    message_BNO055_data_looper   ( message* msg );
 void    message_BNO055_data_printer  ( message* msg );
 void    message_BNO055_data_publisher( message* msg );
-void    message_BNO055_data_looper   ( message* msg );
 void    message_BNO055_data_to_json  ( message* msg );
 
  
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 
-void    message_BNO055_info_tester(    message* msg ) {
+void    message_BNO055_info_tester   ( message* msg ) {
   DBG_SERIAL.println( F("message_BNO055_info_tester") ); 
   DBG_SERIAL.flush(); 
 }
 
-void    message_BNO055_info_initer(    message* msg ) {
+void    message_BNO055_info_initer   ( message* msg ) {
   /* Initialise the sensor */
 
   DBG_SERIAL.println( F("Starting BNO055"    ) );
@@ -137,8 +159,7 @@ void    message_BNO055_info_initer(    message* msg ) {
   message_BNO055_info_updater( msg );
 }
 
-
-void    message_BNO055_info_updater(   message* msg ) {
+void    message_BNO055_info_updater  ( message* msg ) {
   sensor_t sensor;
   bno.getSensor(&sensor);
 
@@ -155,7 +176,9 @@ void    message_BNO055_info_updater(   message* msg ) {
   message_BNO055_info_to_json( msg );
 }
 
-void    message_BNO055_info_printer(   message* msg ) {
+void    message_BNO055_info_looper   ( message* msg ) {}
+
+void    message_BNO055_info_printer  ( message* msg ) {
   DBG_SERIAL.print( F( "Sensor:       " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_name       );
   DBG_SERIAL.print( F( "Driver Ver:   " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_version    );
   DBG_SERIAL.print( F( "Unique ID:    " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_id         );
@@ -170,17 +193,11 @@ void    message_BNO055_info_printer(   message* msg ) {
 void    message_BNO055_info_publisher( message* msg ) {
   String text;
   msg->pop_message( text );
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#else
-  DBG_SERIAL.print( F( "BROADCAST REGISTER: " ) );
-  DBG_SERIAL.println( text );
-#endif
+
+  broadcastMessage( text );
 }
 
-void    message_BNO055_info_looper(    message* msg ) {}
-
-void    message_BNO055_info_to_json(   message* msg ) {
+void    message_BNO055_info_to_json  ( message* msg ) {
   DBG_SERIAL.println( F( "message_BNO055_info_to_json START" ) );
   
   jsonBuffer_t jsonBuffer;
@@ -217,45 +234,46 @@ void    message_BNO055_info_to_json(   message* msg ) {
 
 
 
-void    message_BNO055_data_tester(    message* msg ) {}
+void    message_BNO055_data_tester   ( message* msg ) {}
 
-void    message_BNO055_data_initer(    message* msg ) {
+void    message_BNO055_data_initer   ( message* msg ) {
   info_BNO055_data.last_loop = millis();
 }
 
-void    message_BNO055_data_updater(   message* msg ) {
+void    message_BNO055_data_updater  ( message* msg ) {
 #ifdef _HANDLER_SERVER_H_
-    if ( webserver_data.busy ) {
-      return;
-    }
+  if ( webserver_data.busy ) {
+    DBG_SERIAL.println( "message_BNO055_data_updater. server busy" );
+    return;
+  }
 #endif
 
 #ifdef _HANDLER_WEBSOCKET_H_
-  if ( websocket_data.has_client == 0 ) {
-    //DBG_SERIAL.println( "NO CLIENT." );
-    return;
+  if ( info_BNO055_data.update_only_if_has_websocket_client ) {
+    DBG_SERIAL.println( "message_BNO055_data_updater. update_only_if_has_websocket_client" );
+    if ( websocket_data.has_client == 0 ) {
+      DBG_SERIAL.println( "message_BNO055_data_updater. update_only_if_has_websocket_client. no client" );
+      //DBG_SERIAL.println( "NO CLIENT." );
+      return;
+    }
   }
 #endif
 
   message_BNO055_data_to_json(msg);
 }
 
-void    message_BNO055_data_printer(   message* msg ) {}
+void    message_BNO055_data_looper   ( message* msg ) {}
+
+void    message_BNO055_data_printer  ( message* msg ) {}
 
 void    message_BNO055_data_publisher( message* msg ) {
   String text;
   msg->pop_message( text );
-#ifdef _HANDLER_WEBSOCKET_H_
-  webSocket.broadcastTXT( text );
-#else
-  DBG_SERIAL.print( F("BROADCAST REGISTER: ") );
-  DBG_SERIAL.println( text );
-#endif
+  
+  broadcastMessage( text );
 }
 
-void    message_BNO055_data_looper(    message* msg ) {}
-
-void    message_BNO055_data_to_json(   message* msg ) {
+void    message_BNO055_data_to_json  ( message* msg ) {
   DBG_SERIAL.println( F("message_BNO055_info_to_json START") );
   
   jsonBuffer_t jsonBuffer;
@@ -340,15 +358,7 @@ void    message_BNO055_data_to_json(   message* msg ) {
 
 
 
-
-
-
-
-
-
-
-
-void    init_BNO055() {
+void    init_BNO055       () {
   DBG_SERIAL.println( F("init_BNO055 START") );
   DBG_SERIAL.flush();
 
@@ -371,47 +381,38 @@ void    init_BNO055() {
   message_BNO055_data_funcs.updater            = message_BNO055_data_updater  ;
   message_BNO055_data_funcs.looper             = message_BNO055_data_looper   ;
   info_BNO055_data.message_BNO055_data_id      = messages.size();
-  message_BNO055_data_msg                      = message("BNO055 Data", -1, -1, message_BNO055_data_funcs);
+  message_BNO055_data_msg                      = message("BNO055 Data", info_BNO055_data.poolEvery, -1, message_BNO055_data_funcs);
   messages.push_back( &message_BNO055_data_msg );  
 
-  
-  
-  DBG_SERIAL.println( F("Registering /BNO055/info") );
-  addEndpoint("BNO055 Info", "/BNO055/info", "", "", HTTP_GET, handleBNO055Info);
-
-  DBG_SERIAL.println( F("Registering /BNO055/data") );
-  addEndpoint("BNO055 Data", "/BNO055/data", "", "", HTTP_GET, handleBNO055data);
-
-
+  server_init_BNO055();
   
   DBG_SERIAL.println( F("init_BNO055 END") );
   DBG_SERIAL.flush();
 }
 
 
-void handleBNO055Info () {
-  String res;
-  message_to_json( message_BNO055_info_msg, res );
-  
-  server.send( 200, "application/json", res );
+#ifndef _HANDLER_SERVER_H_
+void    server_init_BNO055() {}
+#else
+void    handleBNO055Info  ();
+void    handleBNO055data  ();
+
+void    server_init_BNO055() {
+  DBG_SERIAL.println( F("Registering /BNO055/info") );
+  addEndpoint("BNO055 Info", "/BNO055/info", "", "", HTTP_GET, handleBNO055Info);
+
+  DBG_SERIAL.println( F("Registering /BNO055/data") );
+  addEndpoint("BNO055 Data", "/BNO055/data", "", "", HTTP_GET, handleBNO055data);
 }
 
-void handleBNO055data () {
-  String res;
-  message_to_json( message_BNO055_data_msg, res );
-
-  server.send( 200, "application/json", res );
+void    handleBNO055Info  () {
+  server_send_message( message_BNO055_info_msg );
 }
 
-
-
-
-
-
-
-
-
-
+void    handleBNO055data  () {
+  server_send_message( message_BNO055_data_msg );
+}
+#endif
 
 
 
@@ -428,8 +429,7 @@ void handleBNO055data () {
     sensor API sensor_t type (see Adafruit_Sensor for more information)
 */
 /**************************************************************************/
-void displaySensorDetails(void)
-{
+void    displaySensorDetails(void) {
   sensor_t sensor;
   bno.getSensor(&sensor);
   DBG_SERIAL.println( F( "------------------------------------" ) );
@@ -449,8 +449,7 @@ void displaySensorDetails(void)
     Display some basic info about the sensor status
 */
 /**************************************************************************/
-void displaySensorStatus(void)
-{
+void    displaySensorStatus (void) {
   /* Get the system status values (mostly for debugging purposes) */
   uint8_t system_status, self_test_results, system_error;
   system_status = self_test_results = system_error = 0;
@@ -473,8 +472,7 @@ void displaySensorStatus(void)
     Display sensor calibration status
 */
 /**************************************************************************/
-void displayCalStatus(void)
-{
+void    displayCalStatus    (void) {
   /* Get the four calibration values (0..3) */
   /* Any sensor data reporting 0 should be ignored, */
   /* 3 means 'fully calibrated" */

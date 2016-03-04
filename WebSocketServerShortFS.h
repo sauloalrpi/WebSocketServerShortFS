@@ -66,7 +66,7 @@ extern "C" {
 
 /* VARIABLES */
 #include "personal.h"
-#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.5"
+#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.6"
 
 
 /* VARIABLES - WIFI */
@@ -93,12 +93,12 @@ extern "C" {
 /* VARIABLES SSDP */
 #define SSDP_NAME             "ESP8266 FS Web Socket Server"
 #define SSDP_URL              "index.html"
-#define SSDP_MODEL_NAME       "FS GPS"
+#define SSDP_MODEL_NAME       "FS GPS BNO055"
 #define SSDP_MODEL_NUMBER     _WEBSOCKETSERVERSHORTFS_VERSION_
 #define SSDP_MODEL_URL        "https://github.com/sauloalrpi/WebSocketServerShortFS"
 #define SSDP_MANUFACTURER     "Espressif"
 #define SSDP_MANUFACTURER_URL "http://espressif.com/en/products/esp8266/"
-#define SSDP_TTL              2
+#define SSDP_TTL              1
 
 
 /* VARIABLES EXTERNAL SENSORS */

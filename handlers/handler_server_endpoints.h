@@ -15,27 +15,32 @@ server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
 server.onNotFound(handleNotFound); //called when the url is not defined here use it to load content from SPIFFS
 */
 
-void        handleIndex();
-void        handleEdit();
-void        handleFileCreate();
-void        handleFileDelete();
-void        handleFileList();
-void        handleFileUploadQuery();
-void        handleFileUploadData();
-void        handleFormatPage();
-void        handleFormatQuery();
-void        handleFormatData();
-void        handleUploadPage();
-bool        handleFileRead(    const String& path   );
-void        handleFileListJson(Dir& dir);
-void        handleFileListHtml(Dir& dir, const String dirname);
-void        handleEndpoints();
-void        handleEndpointsJson();  
-void        handleEndpointsHtml();
-void        handleNotFound();
-const bool  ends_with(const String& filename, const char* ext);
-const bool  ends_with(const String& filename, String      ext);
-String      getContentType(const String& filename);
+String getContentType( const String& filename );
+
+void   handleFileCreate();
+void   handleFileDelete();
+bool   handleFileRead( const String& path );
+
+void   handleIndex();
+void   handleEdit();
+
+void   handleFormatPage();
+void   handleFormatQuery();
+void   handleFormatData();
+
+void   handleFileUploadPage();
+void   handleFileUploadQuery();
+void   handleFileUploadData();
+
+void   handleFileListPage();
+void   handleFileListJson( Dir& dir );
+void   handleFileListHtml( Dir& dir, const String dirname );
+
+void   handleEndpointsPage();
+void   handleEndpointsJson();  
+void   handleEndpointsHtml();
+
+void   handleNotFound();
 
 
 
@@ -60,19 +65,11 @@ String getContentType(const String& filename) {
   return "text/plain";
 }
 
-void   handleIndex() {
-  if ( handleFileRead(server.uri()) ) { return; }
-    
-  String links = "";
-  genLinks(links);
-  server.send(200, "text/html", "<html><h1>Index</h1><br/>"+links+"</body></html>" );  
-}
 
-void   handleEdit() {
-  if( !handleFileRead("/edit.html") ) {
-    server.send(404, "text/plain", "FileNotFound");
-  }
-}
+
+
+
+
 
 void   handleFileCreate() {
   if (  server.args() == 0   ) { return server.send(500, "text/plain", "No path given"); }
@@ -111,6 +108,59 @@ void   handleFileDelete() {
   path = String();
 }
 
+bool   handleFileRead( const String& rpath ) {
+  String path = rpath;
+  
+  DBG_SERIAL.println("handleFileRead: " + path);
+  
+  if(path.endsWith("/")) {
+    path += "index.html";
+  }
+  
+  String contentType    = getContentType(path);
+  String pathWithGz     = path         + ".gz";
+  String pathWithHTML   = path         + ".html";
+  String pathWithHTMLGz = pathWithHTML + ".gz";
+  
+  if (  SPIFFS.exists(pathWithGz) || SPIFFS.exists(pathWithHTML) || SPIFFS.exists(pathWithHTMLGz) || SPIFFS.exists(path) ) {
+    if( SPIFFS.exists(pathWithGz) ) {
+      path        = pathWithGz;
+    }
+    else if( SPIFFS.exists(pathWithHTML) ) {
+      path        = pathWithHTML;
+      contentType = getContentType(pathWithHTML);
+    }
+    else if( SPIFFS.exists(pathWithHTMLGz) ) {
+      path        = pathWithHTMLGz;
+      contentType = getContentType(pathWithHTML);
+    }
+    File   file = SPIFFS.open(path, "r");
+    size_t sent = server.streamFile(file, contentType);
+    file.close();
+    return true;
+  }
+  
+  return false;
+}
+
+
+
+void   handleIndex() {
+  if ( handleFileRead(server.uri()) ) { return; }
+    
+  String links = "";
+  genLinks(links);
+  server.send(200, "text/html", "<html><h1>Index</h1><br/>"+links+"</body></html>" );  
+}
+
+void   handleEdit() {
+  if( !handleFileRead("/edit.html") ) {
+    server.send(404, "text/plain", "FileNotFound");
+  }
+}
+
+
+
 void   handleFormatPage() {
   if ( handleFileRead(server.uri()) ) { return; }
   
@@ -139,7 +189,9 @@ void   handleFormatData() {
   SPIFFS.format();
 }
 
-void   handleUploadPage() {
+
+
+void   handleFileUploadPage() {
   if ( handleFileRead(server.uri()) ) { return; }
   
   String dirname = "/";
@@ -207,42 +259,9 @@ void   handleFileUploadData() {
   }
 }
 
-bool   handleFileRead(const String& rpath) {
-  String path = rpath;
-  
-  DBG_SERIAL.println("handleFileRead: " + path);
-  
-  if(path.endsWith("/")) {
-    path += "index.html";
-  }
-  
-  String contentType    = getContentType(path);
-  String pathWithGz     = path         + ".gz";
-  String pathWithHTML   = path         + ".html";
-  String pathWithHTMLGz = pathWithHTML + ".gz";
-  
-  if (  SPIFFS.exists(pathWithGz) || SPIFFS.exists(pathWithHTML) || SPIFFS.exists(pathWithHTMLGz) || SPIFFS.exists(path) ) {
-    if( SPIFFS.exists(pathWithGz) ) {
-      path        = pathWithGz;
-    }
-    else if( SPIFFS.exists(pathWithHTML) ) {
-      path        = pathWithHTML;
-      contentType = getContentType(pathWithHTML);
-    }
-    else if( SPIFFS.exists(pathWithHTMLGz) ) {
-      path        = pathWithHTMLGz;
-      contentType = getContentType(pathWithHTML);
-    }
-    File   file = SPIFFS.open(path, "r");
-    size_t sent = server.streamFile(file, contentType);
-    file.close();
-    return true;
-  }
-  
-  return false;
-}
 
-void   handleFileList() {
+
+void   handleFileListPage() {
   String dirname = "/";
   
   if( server.hasArg("dir") ) { dirname = server.arg("dir"); }
@@ -327,7 +346,9 @@ void   handleFileListHtml(Dir& dir, const String dirname) {
   server.send(200, "text/html", output);
 }
 
-void        handleEndpoints() {
+
+
+void   handleEndpointsPage() {
   if(server.hasArg("json")) { 
     handleEndpointsJson();
   } else {
@@ -335,7 +356,7 @@ void        handleEndpoints() {
   }
 }
 
-void        handleEndpointsJson() {
+void   handleEndpointsJson() {
   String output;
   gen_endpoints_json(output);
   
@@ -345,7 +366,7 @@ void        handleEndpointsJson() {
   server.send(200, "application/json", output);
 }
 
-void        handleEndpointsHtml() {
+void   handleEndpointsHtml() {
   String output = "<html><body><h1>Endpoints</h1><br/><table>";
   int rc = 0;
   for (auto& eps: webserver_data.endpoints) {    
@@ -380,6 +401,8 @@ void        handleEndpointsHtml() {
   
   server.send(200, "text/html", output);
 }
+
+
 
 void   handleNotFound(){
   DBG_SERIAL.print  ( "handleNotFound: " );
