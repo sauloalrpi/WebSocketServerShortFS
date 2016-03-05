@@ -50,7 +50,19 @@ class message {
         this->init();
       }
     }
-    void     set_message(      String&         n_message   ) { this->init();        this->c_message    = n_message.c_str(); this->updated = true ; this->num_updates += 1;  DBG_SERIAL.print( "Setting var: " ); DBG_SERIAL.print( nickname ); DBG_SERIAL.print( " val: " ); DBG_SERIAL.println( n_message ); DBG_SERIAL.flush(); }
+    void     set_message(      String&         n_message   ) { 
+      this->init();        
+      this->c_message    = n_message.c_str(); 
+      this->updated      = true ; 
+      this->num_updates += 1;  
+      /*
+      DBG_SERIAL.print( "Setting var: " ); 
+      DBG_SERIAL.print( nickname ); 
+      DBG_SERIAL.print( " val: " ); 
+      DBG_SERIAL.println( n_message ); 
+      DBG_SERIAL.flush(); 
+      */
+    }
     void     pop_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str(); this->updated = false; if (erase_on_pop) { this->c_message    = ""; }; }
     void     get_message(      String&         o_message   ) { this->init();              o_message    = c_message.c_str(); }
     void     set_update_every( int32_t ue                  ) { this->init();        this->update_every = ue;   }
@@ -103,13 +115,15 @@ class message {
 //      DBG_SERIAL.print( "Loopped Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
     }
     void     update()                                        {
-//      DBG_SERIAL.print( "Updating Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
+      //DBG_SERIAL.print( "Updating Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
       
       this->init();
       
       if ( this->update_every >= 0 ) {
         if (( ! this->updated ) || ( this->keep_updated )) {
           if ( (millis() - this->last_update) >= this->update_every ) {
+            //DBG_SERIAL.print( "Updating Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
+            
             this->funcs.updater(   this );
             
             if ( this->is_updated() ) {

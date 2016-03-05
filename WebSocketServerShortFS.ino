@@ -9,6 +9,11 @@
 /* VARIABLES */
 #include "WebSocketServerShortFS.h"
 
+/* DEFINITIONS */
+ESP8266WiFiMulti WiFiMulti;
+
+
+
 static void init_system();
 static void init_serial();
 static void init_spiffs();

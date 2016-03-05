@@ -1,9 +1,39 @@
 #ifndef _HANDLER_INFO_H_
 #define _HANDLER_INFO_H_
 
+#ifndef WIFI_HOST
+#define WIFI_HOST                        "esp8266fs"
+#endif
+
+#ifndef JSON_BUFFER_SIZE
+#define JSON_BUFFER_SIZE                        1536
+#endif
+
+#ifndef _WEBSOCKETSERVERSHORTFS_VERSION_
+#define _WEBSOCKETSERVERSHORTFS_VERSION_       "0.0"
+#endif
+
+#ifndef __ESP8266_VERSION__
+#define __ESP8266_VERSION__                    "0.0"
+#endif
+#ifndef __BNO055_VERSION__
+#define __BNO055_VERSION__                     "0.0"
+#endif
+#ifndef __ARDUINOJSON_VERSION__
+#define __ARDUINOJSON_VERSION__                "0.0"
+#endif
+#ifndef __WEBSOCKER_VERSION__
+#define __WEBSOCKER_VERSION__                  "0.0"
+#endif
+#ifndef __STANDARDCPP_VERSION__
+#define __STANDARDCPP_VERSION__                "0.0"
+#endif
+
+
+
 #include <ArduinoJson.h>
 
-struct info_static_data_t {
+struct info_static_data_t  {
   uint8_t  message_static_id;
   uint8_t  info_dynamic_id;
   String   version                = _WEBSOCKETSERVERSHORTFS_VERSION_;
@@ -260,11 +290,13 @@ void    message_dynamic_info_updater  ( message* msg ) {
 void    message_dynamic_info_printer  ( message* msg ) {
 //  DBG_SERIAL.println( F("info_dynamic_printer START") );
   
+  /*
   DBG_SERIAL.print( F("Free RAM                            : ") ); DBG_SERIAL.print  ( info_dynamic_data.freeRAM                          ); DBG_SERIAL.println( F(" KBytes") );
   DBG_SERIAL.print( F("Free Heap                           : ") ); DBG_SERIAL.println( info_dynamic_data.freeHeap                         );
   DBG_SERIAL.print( F("System Uptime                       : ") ); DBG_SERIAL.println( info_dynamic_data.systemUptime                     ); 
   DBG_SERIAL.print( F("Number of Messages                  : ") ); DBG_SERIAL.println( info_dynamic_data.numMessages                      );
   DBG_SERIAL.print( F("System Instruction Cycles Per Second: ") ); DBG_SERIAL.println( info_dynamic_data.systemInstructionCyclesPerSecond );
+  */
   
 //  DBG_SERIAL.println( F("info_dynamic_printer END") );
   // DBG_SERIAL.flush();

@@ -1,11 +1,15 @@
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
+#ifndef JSON_BUFFER_SIZE
+#define JSON_BUFFER_SIZE       1536
+#endif
+
 #include <ArduinoJson.h>
 
 typedef StaticJsonBuffer<JSON_BUFFER_SIZE> jsonBuffer_t;
-typedef std::vector<String>     string_vec;
-typedef std::vector<string_vec> string_vec_vec;
+typedef std::vector<String>                string_vec;
+typedef std::vector<string_vec>            string_vec_vec;
 
 void   delayy(int d);
 String formatBytes(size_t bytes);

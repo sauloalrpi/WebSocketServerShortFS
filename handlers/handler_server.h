@@ -1,6 +1,11 @@
 #ifndef _HANDLER_SERVER_H_
 #define _HANDLER_SERVER_H_
 
+/* VARIABLES - SERVERS */
+#ifndef WEBSERVER_PORT
+#define WEBSERVER_PORT           80
+#endif
+
 #include <ESP8266WebServer.h>
 #include <ArduinoJson.h>
 
@@ -232,8 +237,7 @@ void        message_webserver_initer   ( message* msg ) {
   DBG_SERIAL.println( F("message_webserver_init START") );
 
   DBG_SERIAL.println( F("Registering WebServer") );
-  DBG_SERIAL.print  ( F("Port:"                ) );
-  DBG_SERIAL.println( WEBSERVER_PORT             );
+  DBG_SERIAL.print  ( F("Port:"                ) ); DBG_SERIAL.println( WEBSERVER_PORT             );
   
   //SERVER INIT
   addEndpoint( "create"   , "/edit"     , "path", ""         , HTTP_PUT   , handleFileCreate                            );
@@ -321,6 +325,10 @@ void        message_webserver_to_json  ( message* msg ) {
   DBG_SERIAL.println( F("message_webserver_to_json END") );
   DBG_SERIAL.flush();  
 }
+
+
+
+
 
 
 

@@ -1,6 +1,15 @@
 #ifndef _HANDLER_WEBSOCKET_H_
 #define _HANDLER_WEBSOCKET_H_
 
+#ifndef WEBSOCKET_PORT
+#define WEBSOCKET_PORT           81
+#endif
+
+#ifndef DEBUG_WS
+#define DEBUG_WS              false
+#endif
+
+
 //https://github.com/Links2004/arduinoWebSockets
 //#define WEBSOCKETS_SERVER_CLIENT_MAX  (5)
 //#define DEBUG_WEBSOCKETS
@@ -181,7 +190,7 @@ void   handleWebsocketInfo   () {
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
     switch(type) {
         case WStype_DISCONNECTED: {
-#ifdef DEBUG_WS
+#if(DEBUG_WS)
             DBG_SERIAL.printf("[%u] Disconnected!\n", num);
             delayy(10);
             websocket_data.has_client -= 1;
@@ -190,7 +199,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         }
         
         case WStype_CONNECTED: {
-#ifdef DEBUG_WS
+#if(DEBUG_WS)
             IPAddress ip = webSocket.remoteIP(num);
             DBG_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
 #endif
@@ -207,7 +216,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         }
         
         case WStype_TEXT: {
-#ifdef DEBUG_WS
+#if(DEBUG_WS)
             DBG_SERIAL.printf("[%u] got Text: %s\n", num, payload);
             //delayy(100);
 #endif

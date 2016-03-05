@@ -3,30 +3,49 @@
 
 #ifdef  USE_GPS
 
+#ifndef GPS_KEEP_UPDATED
 #define GPS_KEEP_UPDATED       true
+#endif
+#ifndef GPS_POOL_EVERY
 #define GPS_POOL_EVERY         1100
+#endif
+#ifndef GPS_READ_FOR
 #define GPS_READ_FOR            900
+#endif
+#ifndef GPS_RX_PORT
 #define GPS_RX_PORT              13
+#endif
+#ifndef GPS_TX_PORT
 #define GPS_TX_PORT              15
+#endif
+//#ifndef 
 //#define GPS_BAUDRATE           9600
+//#endif
+#ifndef GPS_BAUDRATE
 #define GPS_BAUDRATE          38400
+#endif
+#ifndef GPS_START_FIELD
 #define GPS_START_FIELD    "$GPRMC"
+#endif
+#ifndef GPS_END_FIELD
 #define GPS_END_FIELD      "$GPGLL"
+#endif
+#ifndef GPS_FIELD_SEP
 #define GPS_FIELD_SEP           "|"
-
-
-#ifdef _HANDLER_WEBSOCKET_H_
-#define GPS_UPDATE_ON_WEBSOCKET  true
-#else
-#define GPS_UPDATE_ON_WEBSOCKET false
 #endif
 
+
+
 #if(BNO055_KEEP_UPDATED)
+#ifdef _HANDLER_WEBSOCKET_H_
 #undef BNO055_UPDATE_ON_WEBSOCKET
 #define BNO055_UPDATE_ON_WEBSOCKET false
+#endif
 #else
+#ifdef _HANDLER_WEBSOCKET_H_
 #undef BNO055_UPDATE_ON_WEBSOCKET
 #define BNO055_UPDATE_ON_WEBSOCKET  true
+#endif
 #endif
 
 

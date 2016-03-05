@@ -1,15 +1,8 @@
 #ifndef _WEBSOCKERSERVERSHORTFS_H_
 #define _WEBSOCKERSERVERSHORTFS_H_
 
-
-/* VARIABLES - DEBUG */
-#define DBG_SET_DEBUG
-#define DBG_BAUDRATE         115200
-
-
 /* IMPORTS - LOCAL */
 #include "dummy_serial.h"
-
 
 /* IMPORTS */
 extern "C" {
@@ -31,7 +24,22 @@ extern "C" {
 //https://github.com/esp8266/arduino-esp8266fs-plugin/releases
 #include <FS.h>
 
+/* IMPORTS - ESP8266 CORE */
+//http://esp8266.github.io/Arduino/versions/2.0.0/doc/reference.html
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266SSDP.h>
+#include <WiFiClient.h>
 
+#define QUOTE(...) #__VA_ARGS__
+
+
+
+
+/* VARIABLES - DEBUG */
+#define DBG_SET_DEBUG
+#define DBG_BAUDRATE           115200
 
 #ifdef  DBG_SET_DEBUG
 #define DBG_SERIAL             Serial
@@ -43,30 +51,12 @@ extern "C" {
 
 
 
-/* IMPORTS - ESP8266 CORE */
-//http://esp8266.github.io/Arduino/versions/2.0.0/doc/reference.html
-#include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
-#include <ESP8266mDNS.h>
-#include <ESP8266SSDP.h>
-#include <WiFiClient.h>
-
-
-#define __ESP8266_VERSION__     "2.1.0"
-#define __BNO055_VERSION__      "1.1.1"
-#define __ARDUINOJSON_VERSION__ "5.1.1"
-#define __WEBSOCKER_VERSION__   "2015_05_20"
-#define __STANDARDCPP_VERSION__ "2013_09_22_af18241"
-
-
-
-#define QUOTE(...) #__VA_ARGS__
+#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.6"
 
 
 
 /* VARIABLES */
 #include "personal.h"
-#define _WEBSOCKETSERVERSHORTFS_VERSION_ "0.6"
 
 
 /* VARIABLES - WIFI */
@@ -80,16 +70,6 @@ extern "C" {
 #define WIFI_HOST            "esp8266fs"
 #endif
 
-
-/* VARIABLES - GLOBAL */
-#define JSON_BUFFER_SIZE       1536
-
-
-/* VARIABLES - SERVERS */
-#define WEBSERVER_PORT           80
-#define WEBSOCKET_PORT           81
-
-
 /* VARIABLES SSDP */
 #define SSDP_NAME             "ESP8266 FS Web Socket Server"
 #define SSDP_URL              "index.html"
@@ -101,10 +81,55 @@ extern "C" {
 #define SSDP_TTL              1
 
 
-/* VARIABLES EXTERNAL SENSORS */
-#define USE_GPS
-#define USE_BNO055
+/* VARIABLES - GLOBAL - TOOLS */
+#define JSON_BUFFER_SIZE       1536
 
+
+/* VARIABLES - SERVERS */
+/* VARIABLES - SERVERS - webserver */
+#define WEBSERVER_PORT           80
+
+/* VARIABLES - SERVERS - webscocket */
+#define WEBSOCKET_PORT           81
+#ifdef  DBG_SET_DEBUG
+#define DEBUG_WS                 true
+#else
+#define DEBUG_WS                false
+#endif
+
+
+/* VARIABLES - INFO */
+#define __ESP8266_VERSION__                           "2.1.0"
+#define __BNO055_VERSION__                            "1.1.1"
+#define __ARDUINOJSON_VERSION__                       "5.1.1"
+#define __WEBSOCKER_VERSION__                    "2015_05_20"
+#define __STANDARDCPP_VERSION__          "2013_09_22_af18241"
+#define WIFI_HOST                                 "esp8266fs"
+
+
+
+/* VARIABLES EXTERNAL SENSORS */
+/* VARIABLES EXTERNAL SENSORS - BNO055 */
+#define USE_BNO055
+#define BNO055_KEEP_UPDATED        true
+#define BNO055_UPDATE_ON_WEBSOCKET true
+#define BNO055_POOL_EVERY           100
+#define BNO055_SDA_PORT               0
+#define BNO055_SCL_PORT               2
+#define BNO055_INIT_ID               55
+
+/* VARIABLES EXTERNAL SENSORS - GPS */
+#define USE_GPS
+#define GPS_KEEP_UPDATED         true
+#define GPS_UPDATE_ON_WEBSOCKET false
+#define GPS_POOL_EVERY           1100
+#define GPS_READ_FOR              900
+#define GPS_RX_PORT                13
+#define GPS_TX_PORT                15
+#define GPS_BAUDRATE            38400
+#define GPS_START_FIELD      "$GPRMC"
+#define GPS_END_FIELD        "$GPGLL"
+#define GPS_FIELD_SEP             "|"
 
 
 
@@ -112,9 +137,6 @@ extern "C" {
 
 
 
-
-/* DEFINITIONS */
-ESP8266WiFiMulti WiFiMulti;
 
 
 #endif //_WEBSOCKERSERVERSHORTFS_H_
