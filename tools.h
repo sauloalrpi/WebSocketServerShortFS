@@ -18,7 +18,7 @@ void   jsonToString(JsonObject& json, String& msg);
 
 
 void   delayy(int d) {
-  unsigned long start = millis();
+  long long start = millis();
   while( (millis() - start) < d ) {
     //yield();
     delay(0);
@@ -52,11 +52,12 @@ void   jsonToString(JsonObject& json, String& msg) {
 
 
 void splitter(String origin, string_vec& res, char sep) {
-  int start      = 0;
-  int end        = 0;
-  int maxIndex   = origin.length()-1;
+  int maxIndex = origin.length() - 1;
   
   /*
+  int start      = 0;
+  int end        = 0;
+  
   DBG_SERIAL.print  ( "origin: "   );
   DBG_SERIAL.println(  origin      );
   DBG_SERIAL.print  ( "sep: "      );

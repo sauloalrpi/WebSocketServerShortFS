@@ -134,10 +134,17 @@ bool   handleFileRead( const String& rpath ) {
       path        = pathWithHTMLGz;
       contentType = getContentType(pathWithHTML);
     }
+    
     File   file = SPIFFS.open(path, "r");
     size_t sent = server.streamFile(file, contentType);
     file.close();
-    return true;
+
+    if (sent == file.size()) {
+      return true;
+    }
+    else {
+      return false;
+    }
   }
   
   return false;

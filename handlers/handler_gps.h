@@ -13,10 +13,10 @@
 #define GPS_READ_FOR            900
 #endif
 #ifndef GPS_RX_PORT
-#define GPS_RX_PORT              13
+#define GPS_RX_PORT               5
 #endif
 #ifndef GPS_TX_PORT
-#define GPS_TX_PORT              15
+#define GPS_TX_PORT               4
 #endif
 //#ifndef 
 //#define GPS_BAUDRATE           9600
@@ -29,9 +29,6 @@
 #endif
 #ifndef GPS_END_FIELD
 #define GPS_END_FIELD      "$GPGLL"
-#endif
-#ifndef GPS_FIELD_SEP
-#define GPS_FIELD_SEP           "|"
 #endif
 
 
@@ -49,6 +46,24 @@
 #endif
 
 
+/*
+  https://github.com/nodemcu/nodemcu-devkit
+  TOUT       ADC_0 -+- D_0  GPIO_16 USER  WAKE
+                NC -+- D_1  GPIO_5                  *RX - TX
+                NC -+- D_2  GPIO_4                  *TX - RX
+                NC -+- D_3  GPIO_0  FLASH
+  I_5V          NC -+- D_4  GPIO_2  TX_D1
+  I_3V3         NC -+- 3V3
+  I_GND         NC -+- GND
+  GPIO_PWM     GND -+- D_5  GPIO_14       H_SPI_CLK
+  GPIO_W_PWM   3V3 -+- D_6  GPIO_12       H_SPI_Q
+  UART         GND -+- D_7  GPIO_13 RX_D2 H_SPI_D   
+  H_SPI        3V3 -+- D_8  GPIO_15 TX_D2 H_SPI_S   
+  KEY           EN -+- D_9  GPIO_3  RX_D0
+  SYSTEM       RST -+- D_10 GPIO_1  RX_D0
+  ADC          GND -+- GND
+  NOT_CONNECT   5V -+- 3V3
+*/
 
 #include <SoftwareSerial.h>
 #include <ArduinoJson.h>
@@ -141,6 +156,7 @@ void    message_gps_info_updater  ( message* msg ) {
 void    message_gps_info_looper   ( message* msg ) {}
 
 void    message_gps_info_printer  ( message* msg ) {
+  /*
   //DBG_SERIAL.println( F("info_gps_printer START") );
   
   DBG_SERIAL.print( F("GPS Pool Every                      : ") ); DBG_SERIAL.println(info_gps_data.gpsPoolEvery                     );
@@ -154,6 +170,8 @@ void    message_gps_info_printer  ( message* msg ) {
   
 //  DBG_SERIAL.println( F("info_gps_printer END") );
 //  DBG_SERIAL.flush();
+*/
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void    message_gps_info_publisher( message* msg ) {
@@ -252,7 +270,7 @@ void    message_gps_data_updater  ( message* msg ) {
 
     if ( hasStarted ) {
       line.trim();
-      if (gps_register.length() != 1) {
+      if (gps_register.length() != 0) {
         gps_register += ",";
       }
       gps_register += "\"" + line + "\"";
@@ -270,7 +288,7 @@ void    message_gps_data_updater  ( message* msg ) {
     // DBG_SERIAL.print( "+ " );
     message_gps_data_to_json(msg, gps_register);
   } else {
-    DBG_SERIAL.print( "- " );
+    //DBG_SERIAL.print( "- " );
   }
   
   /*
@@ -295,7 +313,9 @@ void    message_gps_data_updater  ( message* msg ) {
 
 void    message_gps_data_looper   ( message* msg ) {}
 
-void    message_gps_data_printer  ( message* msg ) {}
+void    message_gps_data_printer  ( message* msg ) {
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
+}
 
 void    message_gps_data_publisher( message* msg ) {
 //  DBG_SERIAL.println( "data_gps_publisher START" );
@@ -310,7 +330,7 @@ void    message_gps_data_to_json  ( message* msg, String& reg ) {
 
   msg->set_message(gps_register);
 
-  DBG_SERIAL.println(gps_register);
+  //DBG_SERIAL.println(gps_register);
 }
 
 
@@ -343,6 +363,7 @@ void    init_gps() {
   message_gps_data_funcs.looper     = message_gps_data_looper   ;
   info_gps_data.message_data_gps_id = messages.size();
   message_gps_data_msg              = message("GPS Data", info_gps_data.gpsPoolEvery, -1, message_gps_data_funcs);
+  message_gps_data_msg.set_keep_updated(true);
   messages.push_back( &message_gps_data_msg );
 
   server_init_GPS();

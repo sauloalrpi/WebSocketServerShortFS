@@ -37,8 +37,7 @@ void broadcastMessage( String& text ) {
 #ifdef _HANDLER_WEBSOCKET_H_
   webSocket.broadcastTXT( text );
 #else
-  DBG_SERIAL.print("broadcastMessage");
-  DBG_SERIAL.println(text);
+  DBG_SERIAL.print("broadcastMessage: "); DBG_SERIAL.println(text);
 #endif
 }
 

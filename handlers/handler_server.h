@@ -288,6 +288,7 @@ void        message_webserver_looper   ( message* msg ) {
 }
 
 void        message_webserver_printer  ( message* msg ) {
+  /*
   DBG_SERIAL.println( F("message_webserver_printer START") );
   
   String ep;
@@ -298,6 +299,8 @@ void        message_webserver_printer  ( message* msg ) {
 
   DBG_SERIAL.println( F("message_webserver_printer END") );
   DBG_SERIAL.flush();
+  */
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void        message_webserver_publisher( message* msg ) {

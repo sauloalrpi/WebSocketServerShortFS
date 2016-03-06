@@ -1,13 +1,39 @@
 #ifndef _WEBSOCKERSERVERSHORTFS_H_
 #define _WEBSOCKERSERVERSHORTFS_H_
 
-/* IMPORTS - LOCAL */
-#include "dummy_serial.h"
+/*
+  https://github.com/nodemcu/nodemcu-devkit
+  TOUT       ADC_0 -+- D_0  GPIO_16 USER  WAKE
+                NC -+- D_1  GPIO_5                  GPS_RX
+                NC -+- D_2  GPIO_4                  GPS_TX
+                NC -+- D_3  GPIO_0  FLASH           BNO055_SDA
+  I_5V          NC -+- D_4  GPIO_2  TX_D1           BNO055_SCL
+  I_3V3         NC -+- 3V3
+  I_GND         NC -+- GND
+  GPIO_PWM     GND -+- D_5  GPIO_14       H_SPI_CLK
+  GPIO_W_PWM   3V3 -+- D_6  GPIO_12       H_SPI_Q
+  UART         GND -+- D_7  GPIO_13 RX_D2 H_SPI_D   
+  H_SPI        3V3 -+- D_8  GPIO_15 TX_D2 H_SPI_S   
+  KEY           EN -+- D_9  GPIO_3  RX_D0
+  SYSTEM       RST -+- D_10 GPIO_1  RX_D0
+  ADC          GND -+- GND
+  NOT_CONNECT   5V -+- 3V3
+*/
+
+
+/* IMPORTS - ARDUINO CORE */
+#include <Arduino.h>
+#include <Hash.h>
+//https://github.com/esp8266/arduino-esp8266fs-plugin/releases
+#include <FS.h>
 
 /* IMPORTS */
 extern "C" {
 #include "user_interface.h"
 }
+
+/* IMPORTS - LOCAL */
+#include "dummy_serial.h"
 
 /* IMPORTS - STANDARD C++ */
 //https://github.com/maniacbug/StandardCplusplus
@@ -18,11 +44,6 @@ extern "C" {
 
 //using namespace std;
 
-/* IMPORTS - ARDUINO CORE */
-#include <Arduino.h>
-#include <Hash.h>
-//https://github.com/esp8266/arduino-esp8266fs-plugin/releases
-#include <FS.h>
 
 /* IMPORTS - ESP8266 CORE */
 //http://esp8266.github.io/Arduino/versions/2.0.0/doc/reference.html
@@ -124,12 +145,11 @@ extern "C" {
 #define GPS_UPDATE_ON_WEBSOCKET false
 #define GPS_POOL_EVERY           1100
 #define GPS_READ_FOR              900
-#define GPS_RX_PORT                13
-#define GPS_TX_PORT                15
+#define GPS_RX_PORT                 5
+#define GPS_TX_PORT                 4
 #define GPS_BAUDRATE            38400
 #define GPS_START_FIELD      "$GPRMC"
 #define GPS_END_FIELD        "$GPGLL"
-#define GPS_FIELD_SEP             "|"
 
 
 

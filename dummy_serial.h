@@ -15,43 +15,43 @@ class dummySerial {
     void begin(unsigned long, uint8_t) {};
     void end() {};
 
-    int available(void) {};
-    int peek(void) {};
-    int read(void) {};
-    int availableForWrite(void) {};
+    int available(void) { return 1; };
+    int peek(void) { return 1; };
+    int read(void) { return 1; };
+    int availableForWrite(void) { return 1; };
     void flush(void) {};
-    size_t write(uint8_t) {};
-    inline size_t write(unsigned long n) {  }
-    inline size_t write(long n) {  }
-    inline size_t write(unsigned int n) { }
-    inline size_t write(int n) {  }
+    size_t write(uint8_t) { return 1; };
+	inline size_t write(unsigned long n) { return 1; }
+    inline size_t write(long n) { return 1; }
+    inline size_t write(unsigned int n) { return 1;  }
+    inline size_t write(int n) { return 1; }
 
     void    printf(String&, int) {};
     void    printf(const char[], int) {};
 
-    size_t print(const __FlashStringHelper *) {};
-    size_t print(const String &) {};
-    size_t print(const char[]) {};
-    size_t print(char) {};
-    size_t print(unsigned char, int = DEC) {};
-    size_t print(int, int = DEC) {};
-    size_t print(unsigned int, int = DEC) {};
-    size_t print(long, int = DEC) {};
-    size_t print(unsigned long, int = DEC) {};
-    size_t print(double, int = 2) {};
-    size_t print(const Printable&) {};
+    size_t print(const __FlashStringHelper *) { return 1; };
+    size_t print(const String &) { return 1; };
+    size_t print(const char[]) { return 1; };
+    size_t print(char) { return 1; };
+    size_t print(unsigned char, int = DEC) { return 1; };
+    size_t print(int, int = DEC) { return 1; };
+    size_t print(unsigned int, int = DEC) { return 1; };
+    size_t print(long, int = DEC) { return 1; };
+    size_t print(unsigned long, int = DEC) { return 1; };
+    size_t print(double, int = 2) { return 1; };
+    size_t print(const Printable&) { return 1; };
 
-    size_t println(const __FlashStringHelper *) {};
-    size_t println(const String &s) {};
-    size_t println(const char[]) {};
-    size_t println(char) {};
-    size_t println(unsigned char, int = DEC) {};
-    size_t println(int, int = DEC) {};
-    size_t println(unsigned int, int = DEC) {};
-    size_t println(long, int = DEC) {};
-    size_t println(unsigned long, int = DEC) {};
-    size_t println(double, int = 2) {};
-    size_t println(const Printable&) {};
-    size_t println(void) {};
+    size_t println(const __FlashStringHelper *) { return 1; };
+    size_t println(const String &s) { return 1; };
+    size_t println(const char[]) { return 1; };
+    size_t println(char) { return 1; };
+    size_t println(unsigned char, int = DEC) { return 1; };
+    size_t println(int, int = DEC) { return 1; };
+    size_t println(unsigned int, int = DEC) { return 1; };
+    size_t println(long, int = DEC) { return 1; };
+    size_t println(unsigned long, int = DEC) { return 1; };
+    size_t println(double, int = 2) { return 1; };
+    size_t println(const Printable&) { return 1; };
+    size_t println(void) { return 1; };
 
 };

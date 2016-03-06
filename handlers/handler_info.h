@@ -140,8 +140,9 @@ void    message_static_info_updater   ( message* msg ) {
 void    message_static_info_looper    ( message* msg ) {}
 
 void    message_static_info_printer   ( message* msg ) {
+/*
   //DBG_SERIAL.println( F("info_static_printer START") );
-  
+
   DBG_SERIAL.print( F("Version                             : ") ); DBG_SERIAL.println( info_static_data.version                         );
   DBG_SERIAL.print( F("MAC address                         : ") ); DBG_SERIAL.println( info_static_data.mac                             );
   DBG_SERIAL.print( F("Chip Id                             : ") ); DBG_SERIAL.println( info_static_data.chipId                          );
@@ -174,6 +175,8 @@ void    message_static_info_printer   ( message* msg ) {
 
   // DBG_SERIAL.println( F("info_static_printer END") );
   DBG_SERIAL.flush();
+*/
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void    message_static_info_publisher ( message* msg ) {
@@ -288,18 +291,21 @@ void    message_dynamic_info_updater  ( message* msg ) {
 }
 
 void    message_dynamic_info_printer  ( message* msg ) {
+  /*
 //  DBG_SERIAL.println( F("info_dynamic_printer START") );
   
-  /*
+
   DBG_SERIAL.print( F("Free RAM                            : ") ); DBG_SERIAL.print  ( info_dynamic_data.freeRAM                          ); DBG_SERIAL.println( F(" KBytes") );
   DBG_SERIAL.print( F("Free Heap                           : ") ); DBG_SERIAL.println( info_dynamic_data.freeHeap                         );
   DBG_SERIAL.print( F("System Uptime                       : ") ); DBG_SERIAL.println( info_dynamic_data.systemUptime                     ); 
   DBG_SERIAL.print( F("Number of Messages                  : ") ); DBG_SERIAL.println( info_dynamic_data.numMessages                      );
   DBG_SERIAL.print( F("System Instruction Cycles Per Second: ") ); DBG_SERIAL.println( info_dynamic_data.systemInstructionCyclesPerSecond );
-  */
+
   
 //  DBG_SERIAL.println( F("info_dynamic_printer END") );
   // DBG_SERIAL.flush();
+  */  
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void    message_dynamic_info_publisher( message* msg ) {

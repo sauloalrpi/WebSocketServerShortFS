@@ -27,22 +27,25 @@ struct message_funcs_t {
     func_publish_t publisher = msgPublisher;
 };
 
+
 class message {
   private:
-    uint32_t           last_update  =     0;
-    uint32_t           last_loop    =     0;
+    int32_t            last_update  =     0;
+    int32_t            last_loop    =     0;
     uint32_t           num_updates  =     0;
-    String             nickname     =    "";
     bool               initted      = false;
-
-    bool               keep_updated = false;
-    bool               erase_on_pop = false;
     bool               updated      = false;
+
+    String             nickname     =    "";
     int32_t            update_every =    -1;
     int32_t            loop_every   =    -1;
+    bool               keep_updated = false;
+    bool               erase_on_pop = false;
+    
+    message_funcs_t    funcs;
+    
     String             c_message    =    "";
 
-    message_funcs_t    funcs;
   public:
     message(){}
     message(String n, int32_t u, int32_t l, message_funcs_t& dfuncs, bool run_init=false, bool ku=false, bool ep=false): nickname(n), update_every(u), loop_every(l), keep_updated(ku), erase_on_pop(ep), funcs(dfuncs), c_message("") { 
@@ -73,8 +76,8 @@ class message {
     int32_t  get_update_every()                              { this->init(); return this->update_every;        }
     int32_t  get_loop_every()                                { this->init(); return this->loop_every;          }
     uint32_t get_num_updates()                               { this->init(); return this->num_updates;         }
-    uint32_t get_last_update()                               { this->init(); return this->last_update;         }
-    uint32_t get_last_loop()                                 { this->init(); return this->last_loop;           }
+    int32_t  get_last_update()                               { this->init(); return this->last_update;         }
+    int32_t  get_last_loop()                                 { this->init(); return this->last_loop;           }
     bool     get_keep_updated()                              { this->init(); return this->keep_updated;        }
     bool     get_erase_on_pop()                              { this->init(); return this->erase_on_pop;        }
     bool     is_initted()                                    { this->init(); return this->initted;             }
@@ -104,7 +107,7 @@ class message {
       this->init(); 
       
       if ( this->loop_every >= 0 ) {
-        if ( (millis() - this->last_loop) >= this->loop_every ) {
+        if ( ((int32_t)millis() - this->last_loop) >= this->loop_every ) {
           this->funcs.looper( this );
           this->last_loop = millis();
           
@@ -121,7 +124,7 @@ class message {
       
       if ( this->update_every >= 0 ) {
         if (( ! this->updated ) || ( this->keep_updated )) {
-          if ( (millis() - this->last_update) >= this->update_every ) {
+          if ( ((int32_t)millis() - this->last_update) >= this->update_every ) {
             //DBG_SERIAL.print( "Updating Messenger: " ); DBG_SERIAL.println( nickname ); DBG_SERIAL.flush();
             
             this->funcs.updater(   this );
@@ -129,7 +132,7 @@ class message {
             if ( this->is_updated() ) {
               this->print();
               this->publish();
-              String  msg; this->repr(msg); DBG_SERIAL.println ( msg ); DBG_SERIAL.flush(); DBG_SERIAL.flush();
+              //String  msg; this->repr(msg); DBG_SERIAL.println ( msg ); DBG_SERIAL.flush(); DBG_SERIAL.flush();
             }
             
             this->last_update = millis();
@@ -147,10 +150,12 @@ class message {
     }
     void     repr(String  &msg)                              {
       msg += "Name: "   + this->nickname                  +
+      " Initted: "      + this->initted                   +
       " Updated: "      + this->updated                   +
       " Keep Updated: " + this->keep_updated              +
       " Num Updates: "  + this->num_updates               +
       " Update Every: " + this->update_every              +
+      " Erase On Pop: " + this->erase_on_pop              +
       " Loop Every: "   + this->loop_every                +
       " Now: "          + millis()                        +
       " Last Updated: " + this->last_update               +
@@ -173,8 +178,8 @@ void message_to_json( message& msg, String& res ) {
   bool     erase_on_pop = msg.get_erase_on_pop();
   bool     keep_updated = msg.get_keep_updated();
   uint32_t num_updates  = msg.get_num_updates();
-  uint32_t last_update  = msg.get_last_update();
-  uint32_t last_loop    = msg.get_last_loop();
+  int32_t  last_update  = msg.get_last_update();
+  int32_t  last_loop    = msg.get_last_loop();
   int32_t  loop_every   = msg.get_loop_every();
   int32_t  update_every = msg.get_update_every();
 

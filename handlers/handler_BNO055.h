@@ -34,6 +34,24 @@
 #endif
 
 
+/*
+  https://github.com/nodemcu/nodemcu-devkit
+  TOUT       ADC_0 -+- D_0  GPIO_16 USER  WAKE
+                NC -+- D_1  GPIO_5  
+                NC -+- D_2  GPIO_4  
+                NC -+- D_3  GPIO_0  FLASH           *SDA - SDA
+  I_5V          NC -+- D_4  GPIO_2  TX_D1           *SCL - SCL
+  I_3V3         NC -+- 3V3
+  I_GND         NC -+- GND
+  GPIO_PWM     GND -+- D_5  GPIO_14       H_SPI_CLK
+  GPIO_W_PWM   3V3 -+- D_6  GPIO_12       H_SPI_Q
+  UART         GND -+- D_7  GPIO_13 RX_D2 H_SPI_D
+  H_SPI        3V3 -+- D_8  GPIO_15 TX_D2 H_SPI_S
+  KEY           EN -+- D_9  GPIO_3  RX_D0
+  SYSTEM       RST -+- D_10 GPIO_1  RX_D0
+  ADC          GND -+- GND
+  NOT_CONNECT   5V -+- 3V3
+*/
 
 
 
@@ -177,6 +195,7 @@ void    message_BNO055_info_updater  ( message* msg ) {
 void    message_BNO055_info_looper   ( message* msg ) {}
 
 void    message_BNO055_info_printer  ( message* msg ) {
+  /*
   DBG_SERIAL.print( F( "Sensor:       " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_name       );
   DBG_SERIAL.print( F( "Driver Ver:   " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_version    );
   DBG_SERIAL.print( F( "Unique ID:    " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_id         );
@@ -186,6 +205,8 @@ void    message_BNO055_info_printer  ( message* msg ) {
   DBG_SERIAL.print( F( "Min Delay:    " ) ); DBG_SERIAL.println( info_BNO055_data.sensor_min_delay  );
   DBG_SERIAL.print( F( "SDA Port:     " ) ); DBG_SERIAL.println( info_BNO055_data.SDAPort           );
   DBG_SERIAL.print( F( "SCL Port:     " ) ); DBG_SERIAL.println( info_BNO055_data.SCLPort           );
+  */
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void    message_BNO055_info_publisher( message* msg ) {
@@ -309,7 +330,9 @@ void    message_BNO055_data_updater  ( message* msg ) {
 
 void    message_BNO055_data_looper   ( message* msg ) {}
 
-void    message_BNO055_data_printer  ( message* msg ) {}
+void    message_BNO055_data_printer  ( message* msg ) {
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
+}
 
 void    message_BNO055_data_publisher( message* msg ) {
   String text;

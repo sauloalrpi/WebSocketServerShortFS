@@ -77,6 +77,7 @@ void   message_websocket_looper   ( message* msg ) {
 }
 
 void   message_websocket_printer  ( message* msg ) {
+  /*
   DBG_SERIAL.println( F("message_websocket_printer START") );
   
   DBG_SERIAL.print( F("max_clients                             : ")); DBG_SERIAL.println(websocket_data.max_clients);
@@ -84,6 +85,8 @@ void   message_websocket_printer  ( message* msg ) {
 
   DBG_SERIAL.println( F("message_websocket_printer END") );
   DBG_SERIAL.flush();
+  */
+  String text; msg->repr(text); DBG_SERIAL.println ( text ); DBG_SERIAL.flush(); delay(0);
 }
 
 void   message_websocket_publisher( message* msg ) {
@@ -197,7 +200,25 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 #endif
             break;
         }
-        
+
+        case WStype_ERROR: {
+#if(DEBUG_WS)
+          DBG_SERIAL.printf("[%u] Error!\n", num);
+          delayy(10);
+          websocket_data.has_client -= 1;
+#endif
+          break;
+        }
+
+        case WStype_BIN: {
+#if(DEBUG_WS)
+          DBG_SERIAL.printf("[%u] Bin!\n", num);
+          delayy(10);
+          websocket_data.has_client -= 1;
+#endif
+          break;
+        }
+
         case WStype_CONNECTED: {
 #if(DEBUG_WS)
             IPAddress ip = webSocket.remoteIP(num);

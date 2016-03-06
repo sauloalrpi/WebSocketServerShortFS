@@ -54,3 +54,9 @@ Temporary Items
 *.zip
 *.pdf
 personal.h
+
+*.sln
+*.vcxproj*
+*.filters
+.vs
+__vm
